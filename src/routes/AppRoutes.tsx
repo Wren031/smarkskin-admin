@@ -1,0 +1,24 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import DashboardLayout from "../components/layout/DashboardLayout";
+import DashboardPage from "../features/dashboard/DashboardPage/DashboardPage";
+
+
+import ProductPage from "../features/products/pages/ProductPage";
+import SettingsPage from "../features/settings/pages/SettingsPage";
+import UsersPage from "../features/users/pages/UserPage";
+import RecommendationPage from "../features/recommendations/page/RecommendationPage";
+export default function AppRoutes() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<DashboardLayout/>}>
+          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="users" element={<UsersPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="products" element={<ProductPage />} />
+          <Route path="recommendation" element={<RecommendationPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}
