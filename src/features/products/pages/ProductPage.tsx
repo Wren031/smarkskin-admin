@@ -54,7 +54,7 @@ export default function ProductPage() {
 
 
         <TitleSize 
-          title="Product's Management"
+          title="Products Management"
           subtitle="Manage and monitor your product inventory"
           />
     
