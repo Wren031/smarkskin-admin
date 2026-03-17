@@ -7,6 +7,7 @@ import ProductPage from "../features/products/pages/ProductPage";
 import SettingsPage from "../features/settings/pages/SettingsPage";
 import UsersPage from "../features/users/pages/UserPage";
 import RecommendationPage from "../features/recommendations/page/RecommendationPage";
+import ViewRecommendationsPage from "../features/recommendations/page/ViewRecommendationsPage";
 export default function AppRoutes() {
   return (
     <BrowserRouter>
@@ -17,6 +18,7 @@ export default function AppRoutes() {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="products" element={<ProductPage />} />
           <Route path="recommendation" element={<RecommendationPage />} />
+          <Route path="/view/:id" element={<ViewRecommendationsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

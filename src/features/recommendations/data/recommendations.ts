@@ -8,8 +8,9 @@ export const recommendation: Recommendation[] = [
         condition: "Acne",
         severity: SEVERITY.MODERATE,
         treatment: "Use a gentle cleanser and acne treatment serum.",
-        products: [products[0], products[1], products[2]],
+        products: [products[0], products[2]],
         precautions: "Avoid oily skincare products.",
         createdAt: "2026-03-16"
     }
+    
 ];
