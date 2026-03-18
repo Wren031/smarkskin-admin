@@ -17,10 +17,10 @@ export default function useProducts() {
   ).length;
 
 
-  // selected product (view/edit)
+
   const [selectedProduct, setSelectedProduct] = useState<Products | null>(null);
 
-  // modal states
+
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
@@ -29,9 +29,7 @@ export default function useProducts() {
 
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  // -------------------------
-  // ADD PRODUCT
-  // -------------------------
+
   const addProduct = (product: Omit<Products, "id">) => {
     const newProduct: Products = {
       ...product,
@@ -41,9 +39,7 @@ export default function useProducts() {
     setProducts((prev) => [...prev, newProduct]);
   };
 
-  // -------------------------
-  // UPDATE PRODUCT
-  // -------------------------
+
   const updateProduct = (updatedProduct: Products) => {
     setProducts((prev) =>
       prev.map((p) =>
@@ -70,9 +66,7 @@ export default function useProducts() {
     }
   };
 
-  // -------------------------
-  // VIEW PRODUCT
-  // -------------------------
+
   const openViewModal = (product: Products) => {
     setSelectedProduct(product);
     console.log("ss")
@@ -84,9 +78,7 @@ export default function useProducts() {
     setIsViewOpen(false);
   };
 
-  // -------------------------
-  // EDIT PRODUCT
-  // -------------------------
+
   const openEditModal = (product: Products) => {
     setSelectedProduct(product);
     setIsEditOpen(true);
@@ -105,14 +97,14 @@ export default function useProducts() {
     products,
     selectedProduct,
 
-    // modal states
+
     isAddOpen,
     isEditOpen,
     isViewOpen,
     deleteId,
 
 
-    // modal setters
+
     setIsAddOpen,
 
     // actions

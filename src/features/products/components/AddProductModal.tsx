@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FaPlus } from "react-icons/fa";
+import type { CSSProperties } from "react";
 import type { Products } from "../types/Products";
 
 interface Props {
@@ -9,15 +10,17 @@ interface Props {
 }
 
 export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
-  const [form, setForm] = useState({
+
+  const initialForm: Omit<Products, "id"> = {
     product_name: "",
     brand: "",
     description: "",
     price: 0,
     image_url: "",
     status: "Available",
-  });
+  };
 
+  const [form, setForm] = useState<Omit<Products, "id">>(initialForm);
   const [preview, setPreview] = useState<string>("");
 
   if (!isOpen) return null;
@@ -27,10 +30,10 @@ export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
   ) => {
     const { name, value } = e.target;
 
-    setForm({
-      ...form,
+    setForm((prev) => ({
+      ...prev,
       [name]: name === "price" ? Number(value) : value,
-    });
+    }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,10 +44,10 @@ export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
 
     setPreview(imageUrl);
 
-    setForm({
-      ...form,
+    setForm((prev) => ({
+      ...prev,
       image_url: imageUrl,
-    });
+    }));
   };
 
   const handleSubmit = () => {
@@ -52,15 +55,7 @@ export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
 
     onSave(form);
 
-    setForm({
-      product_name: "",
-      brand: "",
-      description: "",
-      price: 0,
-      image_url: "",
-      status: "Available",
-    });
-
+    setForm(initialForm);
     setPreview("");
 
     onClose();
@@ -69,6 +64,7 @@ export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
   return (
     <div style={styles.overlay}>
       <div style={styles.modal}>
+
         <div style={styles.header}>
           <FaPlus color="#2563eb" />
           <h2 style={styles.title}>Add New Product</h2>
@@ -78,7 +74,7 @@ export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
           <div style={styles.formGroup}>
             <label style={styles.label}>Product Name</label>
             <input
-              name="product_name"
+              name="name"
               value={form.product_name}
               onChange={handleChange}
               style={styles.input}
@@ -163,12 +159,14 @@ export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
             Save Product
           </button>
         </div>
+
       </div>
     </div>
   );
 }
 
-const styles: { [key: string]: React.CSSProperties } = {
+const styles: { [key: string]: CSSProperties } = {
+
   overlay: {
     position: "fixed",
     inset: 0,

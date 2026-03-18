@@ -1,378 +1,173 @@
-import { type CSSProperties, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { type CSSProperties, useMemo, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { recommendation as recommendationData } from "../data/recommendations";
+import type { Recommendation } from "../types/Recommendation";
 
-interface Product {
-  id: number;
-  product_name: string;
-  image_url: string;
-}
-
-interface Recommendation {
-  id: number;
-  condition: string;
-  severity: "Mild" | "Moderate" | "Severe";
-  treatment: string;
-  precautions: string;
-  products?: Product[];
-  createdAt: string;
-}
-
-export default function ViewRecommendationsPage() {
-  const { id } = useParams();
+export default function EditableRecommendationPage() {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const recommendation: Recommendation | undefined = useMemo(
-    () => recommendationData.find((item) => item.id === Number(id)),
-    [id]
-  );
+  // 1. Find initial data
+  const initialData = useMemo(() => {
+    return recommendationData.find((item) => item.id === Number(id));
+  }, [id]);
 
-  if (!recommendation) {
-    return <EmptyState onBack={() => navigate(-1)} />;
-  }
+  // 2. State for Edit Mode and Form Data
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState<Recommendation | undefined>(initialData);
+
+  if (!formData) return <div style={styles.page}>Loading...</div>;
+
+  const handleInputChange = (key: keyof Recommendation, value: string) => {
+    setFormData((prev) => (prev ? { ...prev, [key]: value } : prev));
+  };
+
+  const handleSave = () => {
+    // Here you would typically perform an API call (e.g., fetch PUT/PATCH)
+    console.log("Saving data:", formData);
+    setIsEditing(false);
+  };
 
   return (
     <div style={styles.page}>
-      <Header onBack={() => navigate(-1)} />
-
-      <div style={styles.card}>
-        <Section title="General Information">
-          <InfoRow label="ID" value={recommendation.id} />
-          <InfoRow label="Condition" value={recommendation.condition} />
-        </Section>
-
-        <Section title="Assessment">
-          <div style={styles.row}>
-            <span style={styles.label}>Severity</span>
-            <span
-              style={{
-                ...styles.badge,
-                ...getSeverityStyle(recommendation.severity),
-              }}
-            >
-              {recommendation.severity}
-            </span>
-          </div>
-        </Section>
-
-        <Section title="Care Plan">
-          <InfoRow label="Treatment" value={recommendation.treatment} />
-          <InfoRow
-            label="Precautions"
-            value={recommendation.precautions}
-          />
-        </Section>
-
-        <Section title="Recommended Products">
-          <ProductList products={recommendation.products} />
-        </Section>
-
-        <Footer createdAt={recommendation.createdAt} />
-      </div>
-    </div>
-  );
-}
-
-/* ================= COMPONENTS ================= */
-
-function Header({ onBack }: { onBack: () => void }) {
-  return (
-    <div style={styles.header}>
-      <div>
-        <h1 style={styles.title}>Recommendation Details</h1>
-        <p style={styles.subtitle}>
-          Complete overview of condition, treatment, and products
-        </p>
-      </div>
-      <button onClick={onBack} style={styles.secondaryBtn}>
-        ← Back
-      </button>
-    </div>
-  );
-}
-
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div style={styles.section}>
-      <h3 style={styles.sectionTitle}>{title}</h3>
-      {children}
-    </div>
-  );
-}
-
-function InfoRow({ label, value }: { label: string; value: any }) {
-  return (
-    <div style={styles.row}>
-      <span style={styles.label}>{label}</span>
-      <span style={styles.value}>{value}</span>
-    </div>
-  );
-}
-
-function ProductList({ products }: { products?: Product[] }) {
-  if (!products?.length) {
-    return <p style={styles.noData}>No products available</p>;
-  }
-
-  return (
-    <div style={styles.productGrid}>
-      {products.map((product) => (
-        <div key={product.id} style={styles.productCard}>
-          <img
-            src={product.image_url}
-            alt={product.product_name}
-            style={styles.productImage}
-          />
-          <p style={styles.productName}>{product.product_name}</p>
+      {/* ===== HEADER ===== */}
+      <header style={styles.header}>
+        <div>
+          <h1 style={styles.mainTitle}>Recommendation Overview</h1>
+          <p style={styles.dateSubtext}>Created At: {formData.createdAt}</p>
         </div>
-      ))}
-    </div>
-  );
-}
-
-function Footer({ createdAt }: { createdAt: string }) {
-  return (
-    <div style={styles.footer}>
-      <span style={styles.footerLabel}>Created At</span>
-      <span style={styles.footerValue}>{createdAt}</span>
-    </div>
-  );
-}
-
-function EmptyState({ onBack }: { onBack: () => void }) {
-  return (
-    <div style={styles.centerContainer}>
-      <div style={styles.emptyCard}>
-        <h2 style={styles.emptyTitle}>Recommendation Not Found</h2>
-        <p style={styles.emptyText}>
-          The requested record could not be located.
-        </p>
-        <button onClick={onBack} style={styles.primaryBtn}>
-          ← Go Back
+        <button 
+          onClick={isEditing ? handleSave : () => setIsEditing(true)} 
+          style={isEditing ? styles.saveButton : styles.editButtonTop}
+        >
+          {isEditing ? "Save Changes" : "Edit Entry"}
         </button>
+      </header>
+
+      <hr style={styles.divider} />
+
+      {/* ===== CONTENT ===== */}
+      <div style={styles.layoutGrid}>
+        
+        {/* LEFT COLUMN */}
+        <div style={styles.leftCol}>
+          <div style={styles.idBadge}>ID: fk2502412-21{formData.id}</div>
+          
+          <section style={styles.sectionGroup}>
+            <h3 style={styles.sectionTitle}>General Information</h3>
+            <div style={styles.infoRowGrid}>
+              <div style={styles.infoBox}>
+                <span style={styles.infoLabel}>Condition</span>
+                {isEditing ? (
+                  <input 
+                    style={styles.inputInline} 
+                    value={formData.condition} 
+                    onChange={(e) => handleInputChange("condition", e.target.value)}
+                  />
+                ) : (
+                  <span style={styles.infoValue}>{formData.condition}</span>
+                )}
+              </div>
+              <div style={styles.infoBox}>
+                <span style={styles.infoLabel}>Severity</span>
+                {isEditing ? (
+                  <select 
+                    style={styles.inputInline} 
+                    value={formData.severity} 
+                    onChange={(e) => handleInputChange("severity", e.target.value)}
+                  >
+                    <option value="Mild">Mild</option>
+                    <option value="Moderate">Moderate</option>
+                    <option value="Severe">Severe</option>
+                  </select>
+                ) : (
+                  <span style={styles.infoValue}>{formData.severity}</span>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section style={styles.sectionGroup}>
+            <h3 style={styles.sectionTitle}>Care Plan</h3>
+            <div style={styles.carePlanBox}>
+               <label style={styles.careLabel}>Treatment</label>
+               {isEditing ? (
+                 <textarea 
+                    style={styles.textarea} 
+                    value={formData.treatment} 
+                    onChange={(e) => handleInputChange("treatment", e.target.value)}
+                 />
+               ) : (
+                 <div style={styles.careContent}>{formData.treatment}</div>
+               )}
+            </div>
+            <div style={styles.carePlanBox}>
+               <label style={styles.careLabel}>Precautions</label>
+               {isEditing ? (
+                 <textarea 
+                    style={styles.textarea} 
+                    value={formData.precautions} 
+                    onChange={(e) => handleInputChange("precautions", e.target.value)}
+                 />
+               ) : (
+                 <div style={styles.careContent}>{formData.precautions}</div>
+               )}
+            </div>
+          </section>
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div style={styles.rightCol}>
+          <h3 style={styles.sectionTitle}>Product Recommendation Treatment</h3>
+          <div style={styles.productFlex}>
+            {formData.products?.map((product) => (
+              <div key={product.id} style={styles.productCard}>
+                <div style={styles.imageContainer}>
+                   <img src={product.image_url} alt={product.product_name} style={styles.productImage} />
+                </div>
+                <p style={styles.productNameText}>{product.product_name}</p>
+                {isEditing && (
+                  <button style={styles.removeBtn}>Remove</button>
+                )}
+              </div>
+            ))}
+            {isEditing && (
+              <div style={styles.addCard}>+ Add Product</div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
-}
-
-/* ================= HELPERS ================= */
-
-function getSeverityStyle(severity: Recommendation["severity"]) {
-  switch (severity) {
-    case "Severe":
-      return styles.severe;
-    case "Moderate":
-      return styles.moderate;
-    default:
-      return styles.mild;
-  }
 }
 
 /* ================= STYLES ================= */
 
 const styles: Record<string, CSSProperties> = {
-  page: {
-    fontFamily: "'Segoe UI', sans-serif",
-    background: "linear-gradient(to bottom, #f8fafc, #eef2f7)",
-    minHeight: "100vh",
-    padding: "50px 20px",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-  },
-
-  header: {
-    width: "100%",
-    maxWidth: 900,
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 30,
-  },
-
-  title: {
-    margin: 0,
-    fontSize: 28,
-    fontWeight: 700,
-    color: "#111827",
-  },
-
-  subtitle: {
-    margin: "6px 0 0",
-    color: "#6b7280",
-    fontSize: 14,
-  },
-
-  card: {
-    width: "100%",
-    maxWidth: 900,
-    background: "#ffffff",
-    borderRadius: 18,
-    padding: 28,
-    boxShadow: "0 15px 35px rgba(0,0,0,0.06)",
-    display: "flex",
-    flexDirection: "column",
-    gap: 24,
-  },
-
-  section: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 12,
-  },
-
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 700,
-    color: "#1f2937",
-    borderLeft: "4px solid #2563eb",
-    paddingLeft: 10,
-  },
-
-  row: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "10px 0",
-    borderBottom: "1px solid #f1f5f9",
-  },
-
-  label: {
-    fontWeight: 600,
-    color: "#374151",
-  },
-
-  value: {
-    color: "#111827",
-    textAlign: "right",
-    maxWidth: "60%",
-  },
-
-  productGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
-    gap: 18,
-  },
-
-  productCard: {
-    background: "#ffffff",
-    border: "1px solid #e5e7eb",
-    padding: 12,
-    borderRadius: 12,
-    textAlign: "center",
-    transition: "all 0.2s ease",
-    cursor: "pointer",
-  },
-
-  productImage: {
-    width: "100%",
-    height: 110,
-    objectFit: "cover",
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-
-  productName: {
-    fontSize: 13,
-    fontWeight: 600,
-    color: "#111827",
-  },
-
-  noData: {
-    color: "#6b7280",
-    fontSize: 14,
-  },
-
-  badge: {
-    padding: "6px 14px",
-    borderRadius: 999,
-    fontSize: 12,
-    fontWeight: 700,
-    letterSpacing: 0.3,
-  },
-
-  mild: {
-    background: "#dcfce7",
-    color: "#166534",
-  },
-
-  moderate: {
-    background: "#fef9c3",
-    color: "#854d0e",
-  },
-
-  severe: {
-    background: "#fee2e2",
-    color: "#991b1b",
-  },
-
-  footer: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginTop: 10,
-    paddingTop: 10,
-    borderTop: "1px solid #e5e7eb",
-  },
-
-  footerLabel: {
-    fontSize: 13,
-    color: "#6b7280",
-  },
-
-  footerValue: {
-    fontSize: 13,
-    fontWeight: 600,
-    color: "#111827",
-  },
-
-  primaryBtn: {
-    padding: "10px 18px",
-    border: "none",
-    borderRadius: 8,
-    background: "#2563eb",
-    color: "#fff",
-    fontWeight: 600,
-    cursor: "pointer",
-  },
-
-  secondaryBtn: {
-    padding: "8px 16px",
-    border: "1px solid #d1d5db",
-    borderRadius: 8,
-    background: "#fff",
-    fontWeight: 500,
-    cursor: "pointer",
-  },
-
-  centerContainer: {
-    height: "100vh",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "#f6f8fb",
-  },
-
-  emptyCard: {
-    background: "#fff",
-    padding: 40,
-    borderRadius: 14,
-    boxShadow: "0 10px 25px rgba(0,0,0,0.05)",
-    textAlign: "center",
-    maxWidth: 320,
-  },
-
-  emptyTitle: {
-    marginBottom: 8,
-  },
-
-  emptyText: {
-    color: "#6b7280",
-    marginBottom: 20,
-  },
+  page: {backgroundColor: "#ffffff", fontFamily: "Inter, sans-serif"},
+  header: { display: "flex", justifyContent: "space-between", alignItems: "flex-start" },
+  mainTitle: { fontSize: "28px", fontWeight: "bold", margin: 0 },
+  dateSubtext: { color: "#9ca3af", fontSize: "14px" },
+  editButtonTop: { backgroundColor: "#000", color: "#fff", padding: "8px 20px", borderRadius: "6px", border: "none", cursor: "pointer" },
+  saveButton: { backgroundColor: "#10b981", color: "#fff", padding: "8px 20px", borderRadius: "6px", border: "none", cursor: "pointer", fontWeight: "bold" },
+  divider: { border: "none", borderTop: "1px solid #eee", margin: "20px 0 40px 0" },
+  layoutGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "60px" },
+  leftCol: { display: "flex", flexDirection: "column", gap: "30px" },
+  idBadge: { backgroundColor: "#e5e7eb", padding: "4px 12px", borderRadius: "4px", fontSize: "11px", width: "fit-content" },
+  sectionTitle: { fontSize: "16px", fontWeight: "bold", marginBottom: "15px" },
+  infoRowGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" },
+  infoBox: { border: "1px solid #e5e7eb", borderRadius: "6px", display: "flex", padding: "8px 12px", justifyContent: "space-between", alignItems: "center" },
+  infoLabel: { color: "#9ca3af", fontSize: "13px" },
+  infoValue: { fontWeight: "bold", fontSize: "13px" },
+  inputInline: { border: "1px solid #3b82f6", borderRadius: "4px", padding: "4px", fontSize: "13px", textAlign: "right", outline: "none" },
+  careLabel: { fontSize: "13px", color: "#6b7280", display: "block", marginBottom: "6px" },
+  careContent: { border: "1px solid #e5e7eb", borderRadius: "8px", padding: "15px", minHeight: "100px", fontSize: "14px" },
+  textarea: { border: "1px solid #3b82f6", borderRadius: "8px", padding: "15px", minHeight: "100px", width: "100%", boxSizing: "border-box", fontSize: "14px", outline: "none" },
+  productFlex: { display: "flex", gap: "20px", flexWrap: "wrap", backgroundColor: "#f9fafb", padding: "20px", borderRadius: "12px" },
+  productCard: { backgroundColor: "#fff", border: "1px solid #e5e7eb", borderRadius: "12px", padding: "12px", width: "160px", textAlign: "center", position: "relative" },
+  imageContainer: { height: "100px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "10px" },
+  productImage: { maxHeight: "100%", maxWidth: "100%", objectFit: "contain" },
+  productNameText: { fontSize: "12px", color: "#1e3a8a", fontWeight: "500" },
+  removeBtn: { marginTop: "10px", color: "#ef4444", border: "none", background: "none", fontSize: "11px", cursor: "pointer", textDecoration: "underline" },
+  addCard: { width: "160px", height: "160px", border: "2px dashed #d1d5db", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", cursor: "pointer", fontSize: "13px" }
 };

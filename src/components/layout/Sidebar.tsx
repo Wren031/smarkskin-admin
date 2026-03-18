@@ -43,6 +43,7 @@ export default function Sidebar({ collapsed, user }: SidebarProps) {
       style={{
         width: collapsed ? 88 : 260,
         height: "100vh",
+        overflow: "hidden", // ✅ prevent sidebar scroll
         backgroundColor: "#ffffff",
         borderRight: "1px solid #e5e7eb",
         display: "flex",

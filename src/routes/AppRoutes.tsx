@@ -12,13 +12,18 @@ export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<DashboardLayout/>}>
+        <Route path="/" element={<DashboardLayout />}>
+          
+          <Route index element={<DashboardPage />} />
+
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="products" element={<ProductPage />} />
           <Route path="recommendation" element={<RecommendationPage />} />
-          <Route path="/view/:id" element={<ViewRecommendationsPage />} />
+          
+          <Route path="view/:id" element={<ViewRecommendationsPage />} />
+
         </Route>
       </Routes>
     </BrowserRouter>

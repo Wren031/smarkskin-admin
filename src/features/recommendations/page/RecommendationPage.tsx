@@ -73,12 +73,11 @@ export default function RecommendationPage() {
         />
       </div>
 
-      {/* TABLE */}
       <RecommendationTable
         recommendation={filteredData}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        onView={(rec) => navigate(`/view/${rec.id}`)} // ✅ router navigation
+        onView={(rec) => navigate(`/view/${rec.id}`)}
       />
     </div>
   );
@@ -88,7 +87,6 @@ const styles: Record<string, CSSProperties> = {
   container: {
     fontFamily: "'Segoe UI', sans-serif",
     backgroundColor: "#ffffff",
-    padding: 20,
   },
 
   statsContainer: {
