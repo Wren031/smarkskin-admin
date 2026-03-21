@@ -3,12 +3,14 @@ import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
-  CalendarDays,
-  BarChart3,
+  Package,
+  Sparkles,
   FileText,
   Settings,
   User,
 } from "lucide-react";
+import { ScanFace  } from "lucide-react";
+
 
 type SidebarProps = {
   collapsed: boolean;
@@ -30,9 +32,9 @@ const iconSize = 20;
 const MENU: MenuItem[] = [
   { to: "/dashboard", label: "DASHBOARD", icon: <LayoutDashboard size={iconSize} strokeWidth={1.8} /> },
   { to: "/users", label: "USERS", icon: <Users size={iconSize} strokeWidth={1.8} /> },
-    { to: "/products", label: "PRODUCTS", icon: <BarChart3 size={iconSize} strokeWidth={1.8} /> },
-  { to: "/recommendation", label: "RECOMMENDATIONS", icon: <CalendarDays size={iconSize} strokeWidth={1.8} /> },
-
+  { to: "/products", label: "PRODUCTS", icon: <Package  size={iconSize} strokeWidth={1.8} /> },
+  { to: "/recommendation", label: "RECOMMENDATIONS", icon: <Sparkles  size={iconSize} strokeWidth={1.8}/>},
+  { to: "/condition", label: "SKIN CONDITION", icon: <ScanFace   size={iconSize} strokeWidth={1.8}/>},
   { to: "/reports", label: "REPORT", icon: <FileText size={iconSize} strokeWidth={1.8} /> },
   { to: "/settings", label: "SETTINGS", icon: <Settings size={iconSize} strokeWidth={1.8} /> },
 ];

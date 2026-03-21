@@ -2,11 +2,16 @@ import type { UserStatus } from "./UserStatus";
 
 export interface User {
   id: number;
-  fullname: string;
+  avatar_url: string;
+  first_name: string;
+  middle_name: string;
+  last_name: string
+  suffix: string;
+  date_of_birth: number;
+  gender: string;
+  phone_number: string;
   address: string;
-  gender: "Male" | "Female";
-  age: number;
-  contact: string;
   status: UserStatus;
-  image: string;
+  create_at: string;
+  update_at: string
 }

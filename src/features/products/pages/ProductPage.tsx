@@ -1,140 +1,85 @@
 import { useState } from "react";
 import type { CSSProperties } from "react";
 
-import ProductTable from "../components/ProductTable";
-import DeleteModal from "../components/DeleteModal";
-import AddProductModal from "../components/AddProductModal";
-import ViewProductModal from "../components/ViewProductModal";
 import StatsCard from "../components/StatCard";
-
 import SearchContainer from "../../../components/SearchContainer";
 import useProducts from "../hooks/useProducts";
 import TitleSize from "../../../styles/TitleSize";
 import { FaPlus, FaBoxOpen, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import AddProductModal from "../components/AddProductModal";
 
+import PageLoader from "../../../components/PageLoader";
+
+import SkeletonTable from "../../../components/SkeletonTable";
+import usePageLoading from "../../../components/hooks/usePageLoading";
+import ProductTable from "../components/ProductTable";
 export default function ProductPage() {
   const {
+    products,
     totalProduct,
     availableProducts,
     outOfStock,
-    products,
-    deleteId,
-    isAddOpen,
-    selectedProduct,
-    isViewOpen,
-
-    setIsAddOpen,
-    closeViewModal,
-    updateProduct,
     addProduct,
-    openDeleteModal,
-    closeDeleteModal,
-    confirmDelete,
-    openViewModal,
+    deleteProduct,
   } = useProducts();
 
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [isAddOpen, setIsAddOpen] = useState(false);
+
+  const { loading, showLoader } = usePageLoading(1200);
 
   const filteredProducts = products.filter((product) => {
     const name = product.product_name?.toLowerCase() || "";
-
     const matchesSearch = name.includes(search.toLowerCase());
 
-    const matchesStatus =
-      statusFilter === "All" || product.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
   return (
     <div style={styles.container}>
-      {/* Header */}
+      <PageLoader loading={showLoader} text="Loading products..." />
+
       <div style={styles.header}>
-
-
-        <TitleSize 
+        <TitleSize
           title="Products Management"
           subtitle="Manage and monitor your product inventory"
-          />
-    
+        />
 
-        <button
-          style={styles.addButton}
-          onClick={() => setIsAddOpen(true)}
-        >
+        <button style={styles.addButton} onClick={() => setIsAddOpen(true)}>
           <FaPlus /> Add Product
         </button>
       </div>
 
-
       <div style={styles.statsContainer}>
-        <StatsCard
-          title="Total Products"
-          value={totalProduct}
-          icon={FaBoxOpen}
-        />
-
-        <StatsCard
-          title="Available Products"
-          value={availableProducts}
-          icon={FaCheckCircle}
-        />
-
-        <StatsCard
-          title="Out of Stock"
-          value={outOfStock}
-          icon={FaTimesCircle}
-        />
+        <StatsCard title="Total Products" value={totalProduct} icon={FaBoxOpen} />
+        <StatsCard title="Available Products" value={availableProducts} icon={FaCheckCircle} />
+        <StatsCard title="Out of Stock" value={outOfStock} icon={FaTimesCircle} />
       </div>
 
       <div style={styles.mainContent}>
         <div style={styles.filterContainer}>
-                <SearchContainer
-                  value={search}
-                  onChange={setSearch}
-                  placeholder="Search products..."
-                />
+          <SearchContainer
+            value={search}
+            onChange={setSearch}
+            placeholder="Search products..."
+          />
 
-                <select
-                  style={styles.select}
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <option value="All">All</option>
-                  <option value="Available">Available</option>
-                  <option value="Out of Stock">Out of Stock</option>
-                </select>
-              </div>
+        </div>
 
-              {/* Product Table */}
-              <div style={styles.tableContainer}>
-                <ProductTable
-                  products={filteredProducts}
-                  onDelete={openDeleteModal}
-                  onView={openViewModal}
-                />
-              </div>
+        <div style={styles.tableContainer}>
+          {loading ? (
+            <SkeletonTable columns={["20%", "40%", "24%", "16%"]} rows={6} />
+          ) : (
+            <ProductTable products={filteredProducts} onDelete={deleteProduct} />
+          )}
+        </div>
 
-              {/* Modals */}
-              <DeleteModal
-                isOpen={deleteId !== null}
-                onConfirm={confirmDelete}
-                onCancel={closeDeleteModal}
-              />
-
-              <AddProductModal
-                isOpen={isAddOpen}
-                onClose={() => setIsAddOpen(false)}
-                onSave={addProduct}
-              />
-
-              <ViewProductModal
-                product={selectedProduct}
-                isOpen={isViewOpen}
-                onClose={closeViewModal}
-                onUpdate={updateProduct}
-              />
+        <AddProductModal
+          isOpen={isAddOpen}
+          onClose={() => setIsAddOpen(false)}
+          onSave={addProduct}
+        />
       </div>
     </div>
   );
@@ -144,25 +89,15 @@ const styles: Record<string, CSSProperties> = {
   container: {
     fontFamily: "'Segoe UI', sans-serif",
     backgroundColor: "#ffffff",
+    padding: "clamp(12px, 2vw, 24px)",
   },
 
   header: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-  },
-
-  title: {
-    fontSize: 28,
-    fontWeight: 800,
-    marginBottom: 6,
-    letterSpacing: -0.2,
-  },
-
-  subtitle: {
-    marginTop: 4,
-    fontSize: 14,
-    color: "#6b7280",
+    flexWrap: "wrap",
+    gap: "12px",
   },
 
   addButton: {
@@ -171,7 +106,7 @@ const styles: Record<string, CSSProperties> = {
     color: "#fff",
     border: "none",
     borderRadius: 8,
-    fontSize: 14,
+    fontSize: "clamp(12px, 1.5vw, 14px)",
     fontWeight: 500,
     cursor: "pointer",
     display: "flex",
@@ -179,37 +114,34 @@ const styles: Record<string, CSSProperties> = {
     gap: 8,
   },
 
-  mainContent:{
+  mainContent: {
     background: "white",
-    overflow: "hidden",
-    marginTop: 5,
+    marginTop: 10,
   },
 
   statsContainer: {
     display: "flex",
-    gap: 10,
+    flexWrap: "wrap",
+    gap: "12px",
+    marginTop: "16px",
   },
 
   filterContainer: {
-
     display: "flex",
-    gap: 10,
+    flexWrap: "wrap",
+    gap: "10px",
     alignItems: "center",
+    marginTop: "12px",
   },
 
   select: {
     height: 45,
-    marginTop: 45,
     padding: "8px 12px",
     borderRadius: 8,
     border: "1px solid #f1f5f9",
-    fontSize: 14,
   },
 
   tableContainer: {
     marginTop: 20,
-    backgroundColor: "#ffffff",
-    border: "1px solid #f1f5f9",
-    overflow: "hidden",
   },
 };

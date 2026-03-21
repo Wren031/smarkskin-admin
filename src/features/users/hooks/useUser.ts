@@ -1,21 +1,34 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { User } from "../typs/User";
-import { users as initialUsers } from "../data/users";
+import { adminService } from "../services/userService";
+import { delay } from "../../../utils/delay";
+export default function useUsers() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const start = Date.now();
 
-export default function useUser() {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const data = await adminService.getAllUsers();
 
-    const totalUsers = users.length;
+          const elapsed = Date.now() - start;
+  
+          if (elapsed < 1000) {
+            await delay(1000 - elapsed);
+          }
+        setUsers(data);
+      } catch (error) {
+        console.error(error);
+        setUsers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    const activeUser = users.filter(u => u.status === "Active").length;
-    const inActiveUser = users.filter(u => u.status === "Inactive").length;
+    fetchUsers();
+  }, []);
 
-
-  return {
-    users,
-    setUsers,
-    totalUsers,
-    activeUser,
-    inActiveUser,
-  };
+  return { users, loading };
 }

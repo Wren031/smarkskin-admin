@@ -34,7 +34,8 @@ export default function RecommendationTable({
           {recommendation.map((rec) => (
             <tr key={rec.id} style={styles.tr}>
               <td style={styles.td}>{rec.id}</td>
-              <td style={styles.td}>{rec.condition}</td>
+
+              <td style={styles.td}>{rec.condition.name}</td>
 
               {/* 🔥 Severity badge */}
               <td style={styles.td}>
@@ -116,13 +117,14 @@ const styles: Record<string, CSSProperties> = {
     background: "#fff",
     borderRadius: 12,
     boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-    overflow: "hidden",
+    overflowX: "auto", // ✅ mobile scroll
   },
 
   table: {
     width: "100%",
     borderCollapse: "collapse",
-    fontSize: 14,
+    fontSize: "clamp(12px, 1.2vw, 14px)",
+    minWidth: "900px", // ✅ prevents squishing
   },
 
   headerRow: {
@@ -134,6 +136,7 @@ const styles: Record<string, CSSProperties> = {
     padding: "12px 16px",
     fontWeight: 600,
     borderBottom: "1px solid #eee",
+    whiteSpace: "nowrap", // ✅ keeps headers clean
   },
 
   tr: {
@@ -142,19 +145,27 @@ const styles: Record<string, CSSProperties> = {
 
   td: {
     padding: "12px 16px",
+    verticalAlign: "top",
+    wordBreak: "break-word", // ✅ prevents overflow
   },
 
   actions: {
     display: "flex",
-    gap: 8,
+    gap: 6,
+    flexWrap: "wrap", // ✅ prevents button overflow
   },
 
-  button: {
-    padding: "6px 10px",
-    borderRadius: 6,
+  iconButton: {
+    width: "clamp(28px, 4vw, 32px)",
+    height: "clamp(28px, 4vw, 32px)",
+    borderRadius: 8,
     border: "none",
     cursor: "pointer",
-    fontSize: 12,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "clamp(12px, 1.5vw, 14px)",
+    transition: "0.2s ease",
   },
 
   viewBtn: {
@@ -175,8 +186,10 @@ const styles: Record<string, CSSProperties> = {
   badge: {
     padding: "4px 8px",
     borderRadius: 999,
-    fontSize: 12,
+    fontSize: "clamp(10px, 1vw, 12px)",
     fontWeight: 500,
+    display: "inline-block",
+    whiteSpace: "nowrap",
   },
 
   mild: {
@@ -193,16 +206,4 @@ const styles: Record<string, CSSProperties> = {
     background: "#fee2e2",
     color: "#991b1b",
   },
-  iconButton: {
-  width: 32,
-  height: 32,
-  borderRadius: 8,
-  border: "none",
-  cursor: "pointer",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: 14,
-  transition: "0.2s ease",
-},
 };

@@ -10,7 +10,6 @@ export default function SearchContainer({ value, onChange, placeholder }: Props)
   return (
     <div style={styles.container}>
         <div style={styles.searchContainer}>
-            <h1 style={styles.label}>Search</h1>
             <input
                 type="text"
                 placeholder={placeholder ?? "Search..."}
@@ -43,7 +42,7 @@ const styles: { [key: string]: CSSProperties } = {
 
   input: {
     padding: "10px 14px",
-    borderRadius: 8,
+    borderRadius: 5,
     border: "1px solid #e5e7eb",
     fontSize: 14,
     width: 450,

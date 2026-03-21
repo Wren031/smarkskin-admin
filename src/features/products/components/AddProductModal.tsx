@@ -2,11 +2,13 @@ import { useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import type { CSSProperties } from "react";
 import type { Products } from "../types/Products";
+import toast from "react-hot-toast";
+import { productServices } from "../services/productServices";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (product: Omit<Products, "id">) => void;
+  onSave: (product: Omit<Products, "id">) => Promise<void>;
 }
 
 export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
@@ -20,11 +22,13 @@ export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
     status: "Available",
   };
 
-  const [form, setForm] = useState<Omit<Products, "id">>(initialForm);
+  const [form, setForm] = useState(initialForm);
   const [preview, setPreview] = useState<string>("");
+  const [file, setFile] = useState<File | null>(null); // ✅ FIX
 
   if (!isOpen) return null;
 
+  // ✅ HANDLE INPUT CHANGE
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -36,45 +40,89 @@ export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
     }));
   };
 
+  // ✅ HANDLE IMAGE SELECT (preview only)
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const selected = e.target.files?.[0];
+    if (!selected) return;
 
-    const imageUrl = URL.createObjectURL(file);
-
-    setPreview(imageUrl);
-
-    setForm((prev) => ({
-      ...prev,
-      image_url: imageUrl,
-    }));
+    setFile(selected); // ✅ store file
+    setPreview(URL.createObjectURL(selected)); // preview only
   };
 
-  const handleSubmit = () => {
-    if (!form.product_name || !form.brand) return;
+  // ✅ SUBMIT (UPLOAD + SAVE)
+  const handleSubmit = async () => {
+    if (!form.product_name.trim()) {
+      toast.error("Product name is required");
+      return;
+    }
 
-    onSave(form);
+    if (!form.brand.trim()) {
+      toast.error("Brand is required");
+      return;
+    }
 
-    setForm(initialForm);
-    setPreview("");
+    if (!form.price || form.price <= 0) {
+      toast.error("Price must be greater than 0");
+      return;
+    }
 
-    onClose();
+    const loadingToast = toast.loading("Saving product...");
+
+    try {
+      let imageUrl = form.image_url;
+
+      // ✅ Upload image if selected
+      if (file) {
+        const uploaded = await productServices.uploadImage(file);
+
+        if (!uploaded) {
+          toast.dismiss(loadingToast);
+          toast.error("Image upload failed");
+          return;
+        }
+
+        imageUrl = uploaded; // ✅ real Supabase URL
+      }
+
+      // ✅ Save to DB
+      await onSave({
+        ...form,
+        image_url: imageUrl,
+      });
+
+      toast.dismiss(loadingToast);
+      toast.success("Product added successfully 🎉");
+
+      // reset
+      setForm(initialForm);
+      setPreview("");
+      setFile(null);
+
+      onClose();
+
+    } catch (err) {
+      toast.dismiss(loadingToast);
+      toast.error("Failed to add product");
+      console.error(err);
+    }
   };
 
   return (
     <div style={styles.overlay}>
       <div style={styles.modal}>
 
+        {/* HEADER */}
         <div style={styles.header}>
-          <FaPlus color="#2563eb" />
+          <FaPlus />
           <h2 style={styles.title}>Add New Product</h2>
         </div>
 
+        {/* NAME + BRAND */}
         <div style={styles.grid}>
           <div style={styles.formGroup}>
             <label style={styles.label}>Product Name</label>
             <input
-              name="name"
+              name="product_name"
               value={form.product_name}
               onChange={handleChange}
               style={styles.input}
@@ -94,6 +142,7 @@ export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
           </div>
         </div>
 
+        {/* DESCRIPTION */}
         <div style={styles.formGroup}>
           <label style={styles.label}>Description</label>
           <textarea
@@ -105,13 +154,14 @@ export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
           />
         </div>
 
+        {/* PRICE + STATUS */}
         <div style={styles.grid}>
           <div style={styles.formGroup}>
             <label style={styles.label}>Price</label>
             <input
               type="number"
               name="price"
-              value={form.price}
+              value={form.price || ""}
               onChange={handleChange}
               style={styles.input}
             />
@@ -127,10 +177,12 @@ export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
             >
               <option value="Available">Available</option>
               <option value="Out of Stock">Out of Stock</option>
+              <option value="Discontinued">Discontinued</option>
             </select>
           </div>
         </div>
 
+        {/* IMAGE */}
         <div style={styles.formGroup}>
           <label style={styles.label}>Product Image</label>
 
@@ -142,14 +194,11 @@ export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
           />
 
           {preview && (
-            <img
-              src={preview}
-              alt="Preview"
-              style={styles.preview}
-            />
+            <img src={preview} alt="Preview" style={styles.preview} />
           )}
         </div>
 
+        {/* BUTTONS */}
         <div style={styles.buttons}>
           <button style={styles.cancelBtn} onClick={onClose}>
             Cancel
@@ -166,7 +215,6 @@ export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
 }
 
 const styles: { [key: string]: CSSProperties } = {
-
   overlay: {
     position: "fixed",
     inset: 0,
@@ -199,7 +247,6 @@ const styles: { [key: string]: CSSProperties } = {
     margin: 0,
     fontSize: 20,
     fontWeight: 600,
-    color: "#111827",
   },
 
   grid: {
@@ -217,23 +264,19 @@ const styles: { [key: string]: CSSProperties } = {
   label: {
     fontSize: 13,
     fontWeight: 500,
-    color: "#374151",
   },
 
   input: {
     padding: "10px 12px",
     borderRadius: 8,
     border: "1px solid #e5e7eb",
-    fontSize: 14,
   },
 
   textarea: {
     padding: "10px 12px",
     borderRadius: 8,
     border: "1px solid #e5e7eb",
-    fontSize: 14,
     minHeight: 80,
-    resize: "none",
   },
 
   fileInput: {
@@ -258,13 +301,12 @@ const styles: { [key: string]: CSSProperties } = {
   },
 
   saveBtn: {
-    background: "#2563eb",
+    background: "#000",
     color: "#fff",
     border: "none",
     padding: "10px 16px",
     borderRadius: 8,
     cursor: "pointer",
-    fontWeight: 500,
   },
 
   cancelBtn: {
@@ -273,6 +315,5 @@ const styles: { [key: string]: CSSProperties } = {
     padding: "10px 16px",
     borderRadius: 8,
     cursor: "pointer",
-    fontWeight: 500,
   },
 };

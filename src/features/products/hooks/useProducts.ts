@@ -1,126 +1,76 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Products } from "../types/Products";
-import { products as initialProducts } from "../data/products";
+import { productServices } from "../services/productServices";
 
 export default function useProducts() {
+  const [products, setProducts] = useState<Products[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [products, setProducts] = useState<Products[]>(initialProducts);
+  const fetchProducts = async () => {
+    setLoading(true);
+    const data = await productServices.getAll();
+    setProducts(data);
+    
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const totalProduct = products.length;
 
   const availableProducts = products.filter(
-    (product) => product.status == "Available"
+    (p) => p.status === "Available"
   ).length;
 
   const outOfStock = products.filter(
-    (product) => product.status == "Out of Stock"
+    (p) => p.status === "Out of Stock"
   ).length;
 
+    const addProduct = async (product: Omit<Products, "id">) => {
+      const newProduct = await productServices.create(product);
 
+      if (!newProduct) {
+        throw new Error("Insert failed");
+      }
 
-  const [selectedProduct, setSelectedProduct] = useState<Products | null>(null);
-
-
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isViewOpen, setIsViewOpen] = useState(false);
-
-
-
-  const [deleteId, setDeleteId] = useState<number | null>(null);
-
-
-  const addProduct = (product: Omit<Products, "id">) => {
-    const newProduct: Products = {
-      ...product,
-      id: Date.now(),
+      await fetchProducts();
     };
 
-    setProducts((prev) => [...prev, newProduct]);
-  };
-
-
-  const updateProduct = (updatedProduct: Products) => {
-    setProducts((prev) =>
-      prev.map((p) =>
-        p.id === updatedProduct.id ? updatedProduct : p
-      )
+  const updateProduct = async (updatedProduct: Products) => {
+    const updated = await productServices.update(
+      updatedProduct.id,
+      updatedProduct
     );
-  };
 
-  const openDeleteModal = (id: number) => {
-    setDeleteId(id);
-  };
-
-  const closeDeleteModal = () => {
-    setDeleteId(null);
-  };
-
-  const confirmDelete = () => {
-    if (deleteId !== null) {
-      setProducts((prev) =>
-        prev.filter((p) => p.id !== deleteId)
-      );
-
-      setDeleteId(null);
+    if (updated) {
+      await fetchProducts();
     }
   };
 
+  const deleteProduct = async (id: number) => {
+    const success = await productServices.delete(id);
 
-  const openViewModal = (product: Products) => {
-    setSelectedProduct(product);
-    console.log("ss")
-    setIsViewOpen(true);
-  };
-
-  const closeViewModal = () => {
-    setSelectedProduct(null);
-    setIsViewOpen(false);
-  };
-
-
-  const openEditModal = (product: Products) => {
-    setSelectedProduct(product);
-    setIsEditOpen(true);
-  };
-
-  const closeEditModal = () => {
-    setSelectedProduct(null);
-    setIsEditOpen(false);
+    if (success) {
+      await fetchProducts();
+    }
   };
 
   return {
+    loading,
+
+    // data
+    products,
     totalProduct,
     availableProducts,
     outOfStock,
 
-    products,
-    selectedProduct,
-
-
-    isAddOpen,
-    isEditOpen,
-    isViewOpen,
-    deleteId,
-
-
-
-    setIsAddOpen,
-
     // actions
     addProduct,
     updateProduct,
+    deleteProduct,
 
-    openDeleteModal,
-    closeDeleteModal,
-    confirmDelete,
-
-    openViewModal,
-    closeViewModal,
-
-    
-
-    openEditModal,
-    closeEditModal,
+    fetchProducts,
   };
 }
