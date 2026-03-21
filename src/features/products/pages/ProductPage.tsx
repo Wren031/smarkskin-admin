@@ -8,7 +8,7 @@ import TitleSize from "../../../styles/TitleSize";
 import { FaPlus, FaBoxOpen, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import AddProductModal from "../components/AddProductModal";
 
-import PageLoader from "../../../components/PageLoader";
+
 
 import SkeletonTable from "../../../components/SkeletonTable";
 import usePageLoading from "../../../components/hooks/usePageLoading";
@@ -26,7 +26,7 @@ export default function ProductPage() {
   const [search, setSearch] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
 
-  const { loading, showLoader } = usePageLoading(1200);
+  const { loading } = usePageLoading(1200);
 
   const filteredProducts = products.filter((product) => {
     const name = product.product_name?.toLowerCase() || "";
@@ -38,7 +38,7 @@ export default function ProductPage() {
 
   return (
     <div style={styles.container}>
-      <PageLoader loading={showLoader} text="Loading products..." />
+
 
       <div style={styles.header}>
         <TitleSize

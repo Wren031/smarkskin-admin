@@ -5,7 +5,6 @@ import type { CSSProperties } from "react";
 import StatsCard from "../../products/components/StatCard";
 import TitleSize from "../../../styles/TitleSize";
 import RecommendationTable from "../components/RecommendationTable";
-import AddRecommendationsPage from "./AddRecommendationsPage";
 import UpdateRecommendation from "../components/UpdateRecommendation";
 import useRecommendations from "../hooks/useRecommendations";
 
@@ -20,7 +19,7 @@ import PageLoader from "../../../components/PageLoader";
 
 export default function RecommendationPage() {
   const [search, setSearch] = useState("");
-  const [showAdd, setShowAdd] = useState(false);
+
   const [showUpdate, setShowUpdate] = useState(false);
 
   const [showDelete, setShowDelete] = useState(false);
@@ -34,13 +33,13 @@ export default function RecommendationPage() {
     handleDelete,
     handleEdit,
     handleUpdate,
-    handleAdd,
     selected,
     loading,
     setSelected,
   } = useRecommendations();
 
-  // 🔍 FILTER
+  
+
   const filteredData = data.filter((rec) =>
     [rec.condition, rec.severity, rec.treatment]
       .join(" ")
@@ -50,7 +49,6 @@ export default function RecommendationPage() {
 
   return (
     <div style={styles.container}>
-      {/* HEADER */}
       <div style={styles.headerContainer}>
         <PageLoader loading={loading} text="Loading products..." />
         <TitleSize
@@ -63,8 +61,6 @@ export default function RecommendationPage() {
         </button>
 
       </div>
-
-      {/* STATS */}
       <div style={styles.statsContainer}>
         <StatsCard
           title="Total Recommendations"
@@ -109,16 +105,6 @@ export default function RecommendationPage() {
         }}
         onView={(rec) => navigate(`/view/${rec.id}`)}
       />
-
-      {showAdd && (
-      <AddRecommendationsPage
-        onAdd={(newRec) => {
-          handleAdd(newRec);
-          setShowAdd(false);
-        }}
-        // onCancel={() => setShowAdd(false)}
-      />
-      )}
 
       {showUpdate && selected && (
         <UpdateRecommendation
@@ -205,8 +191,8 @@ const styles: Record<string, CSSProperties> = {
 
   searchInput: {
     padding: "10px",
-    width: "100%", // 🔥 full width on mobile
-    maxWidth: "400px", // keeps it nice on desktop
+    width: "100%",
+    maxWidth: "400px",
     borderRadius: 8,
     border: "1px solid #ccc",
     fontSize: "clamp(12px, 1.5vw, 14px)",
