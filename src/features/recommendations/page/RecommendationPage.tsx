@@ -15,7 +15,7 @@ import {
   FaPlus,
 } from "react-icons/fa";
 import ConfirmModal from "../../../components/ConfirmModal";
-import PageLoader from "../../../components/PageLoader";
+
 
 export default function RecommendationPage() {
   const [search, setSearch] = useState("");
@@ -34,7 +34,6 @@ export default function RecommendationPage() {
     handleEdit,
     handleUpdate,
     selected,
-    loading,
     setSelected,
   } = useRecommendations();
 
@@ -50,7 +49,7 @@ export default function RecommendationPage() {
   return (
     <div style={styles.container}>
       <div style={styles.headerContainer}>
-        <PageLoader loading={loading} text="Loading products..." />
+
         <TitleSize
           title="AI Treatment Plan Management"
           subtitle="Manage condition-based recommendations used by the facial health AI"

@@ -1,147 +1,165 @@
-import { useEffect, useState } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
+import { Menu, Bell, Search, MoreVertical, User, Settings, LogOut } from "lucide-react";
 
-type TopHeaderProps = {
+// --- Types ---
+interface TopHeaderProps {
   isDesktop: boolean;
-  collapsed: boolean;
-  setCollapsed: (value: boolean) => void;
   setMobileOpen: (value: boolean) => void;
   userName?: string;
-};
+}
 
 export default function TopHeader({
   isDesktop,
-  collapsed,
-  setCollapsed,
   setMobileOpen,
   userName = "Admin",
 }: TopHeaderProps) {
-  const [darkMode, setDarkMode] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  // ✅ Load saved theme (or system preference)
+  // Close menu when clicking outside
   useEffect(() => {
-    const saved = localStorage.getItem("theme");
-
-    if (saved) {
-      setDarkMode(saved === "dark");
-    } else {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      setDarkMode(prefersDark);
-    }
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ Apply + save theme globally
-  useEffect(() => {
-    const root = document.documentElement;
-
-    if (darkMode) {
-      root.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      root.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  }, [darkMode]);
+  const dateStr = useMemo(() => {
+    return new Date().toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  }, []);
 
   return (
-    <header
-      className="header"
-      style={{
-        height: 70,
-        padding: "0 24px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        background: darkMode
-          ? "rgba(17, 24, 39, 0.9)"
-          : "rgba(255, 255, 255, 0.9)",
-        backdropFilter: "blur(10px)",
-        borderBottom: darkMode
-          ? "1px solid #374151"
-          : "1px solid #e5e7eb",
-        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
-        transition: "all 0.3s ease", // ✅ smooth
-      }}
-    >
-      {/* LEFT SIDE */}
-      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <button
-          onClick={() =>
-            isDesktop
-              ? setCollapsed(!collapsed)
-              : setMobileOpen(true)
-          }
-          aria-label="Toggle Navigation"
-          style={{
-            height: 40,
-            width: 40,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 18,
-            borderRadius: 8,
-            border: "none",
-            background: darkMode ? "#1f2937" : "#ffffff",
-            color: darkMode ? "#fff" : "#000",
-            cursor: "pointer",
-            transition: "all 0.3s ease",
-          }}
-        >
-          {isDesktop ? (collapsed ? "›" : "‹") : "☰"}
-        </button>
+    <header style={{ 
+      ...headerContainerStyle, 
+      padding: isDesktop ? "0 32px" : "0 16px" 
+    }}>
+      {/* Left Section */}
+      <div style={flexCenterGap(isDesktop ? 16 : 12)}>
+        {!isDesktop && (
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            style={mobileMenuButtonStyle}
+          >
+            <Menu size={20} />
+          </button>
+        )}
 
-        <h2
-          style={{
-            margin: 0,
-            fontSize: 18,
-            fontWeight: 600,
-            color: darkMode ? "#f9fafb" : "#111827",
-            transition: "color 0.3s ease",
-          }}
-        >
-          Good morning, {userName}
-        </h2>
+        {isDesktop && (
+          <div style={textGroupStyle}>
+            <h2 style={titleStyle}>Goodmorning, {userName}</h2>
+            <time style={subtitleStyle}>{dateStr}</time>
+          </div>
+        )}
       </div>
 
-      {/* RIGHT SIDE */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      {/* Right Section */}
+      <div style={flexCenterGap(isDesktop ? 12 : 8)}>
+        {isDesktop && (
+          <div style={searchContainerStyle}>
+            <Search size={18} style={{ color: "#9ca3af" }} />
+            <span style={searchPlaceholderStyle}>Search...</span>
+          </div>
+        )}
         
-        {/* 🌙 DARK MODE BUTTON */}
-        <button
-          onClick={() => setDarkMode(!darkMode)}
-          style={{
-            border: "none",
-            borderRadius: 6,
-            padding: "8px 12px",
-            cursor: "pointer",
-            background: darkMode ? "#374151" : "#e5e7eb",
-            color: darkMode ? "#fff" : "#000",
-            fontWeight: 500,
-            transition: "all 0.3s ease",
-          }}
-        >
-          {darkMode ? "☀️ Light" : "🌙 Dark"}
+        <button type="button" style={iconButtonStyle}>
+          <div style={notificationBadgeStyle} />
+          <Bell size={20} />
         </button>
 
-        {/* LOGOUT */}
-        <button
-          style={{
-            background: "transparent",
-            border: "none",
-            fontSize: 15,
-            fontWeight: 500,
-            color: darkMode ? "#f87171" : "#7e0000",
-            cursor: "pointer",
-            padding: "8px 12px",
-            borderRadius: 6,
-            transition: "all 0.3s ease",
-          }}
-          onClick={() => {
-            console.log("Logout clicked");
-          }}
-        >
-          Logout
-        </button>
+        {/* --- Avatar / 3-Dots Menu Container --- */}
+        <div style={{ position: "relative" }} ref={menuRef}>
+          {isDesktop ? (
+            <div 
+              style={avatarPlaceholderStyle} 
+              onClick={() => setShowMenu(!showMenu)}
+            >
+              {userName.charAt(0)}
+            </div>
+          ) : (
+            <button 
+              type="button" 
+              style={moreButtonStyle} 
+              onClick={() => setShowMenu(!showMenu)}
+            >
+              <MoreVertical size={20} />
+            </button>
+          )}
+
+          {/* Dropdown Menu */}
+          {showMenu && (
+            <div style={dropdownStyle}>
+              <div style={dropdownItemStyle}><User size={16} /> Profile</div>
+              <div style={dropdownItemStyle}><Settings size={16} /> Settings</div>
+              <hr style={{ border: "0", borderTop: "1px solid #f1f5f9", margin: "4px 0" }} />
+              <div style={{ ...dropdownItemStyle, color: "#ef4444" }}><LogOut size={16} /> Logout</div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
 }
+
+// --- Styles ---
+
+const dropdownStyle: React.CSSProperties = {
+  position: "absolute",
+  top: "120%",
+  right: 0,
+  width: "160px",
+  backgroundColor: "#ffffff",
+  borderRadius: "12px",
+  boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+  border: "1px solid #e2e8f0",
+  padding: "8px",
+  display: "flex",
+  flexDirection: "column",
+  zIndex: 100,
+};
+
+const dropdownItemStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+  padding: "10px 12px",
+  fontSize: "14px",
+  color: "#475569",
+  borderRadius: "8px",
+  cursor: "pointer",
+  transition: "background 0.2s",
+  // In a real app, use a CSS class for :hover
+};
+
+// ... (Rest of your previous styles remain the same)
+const headerContainerStyle: React.CSSProperties = {
+  height: "72px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  backgroundColor: "rgba(255, 255, 255, 0.85)",
+  backdropFilter: "blur(12px)",
+  borderBottom: "1px solid #eceef2",
+  position: "sticky",
+  top: 0,
+  zIndex: 30,
+};
+
+const titleStyle: React.CSSProperties = { margin: 0, fontSize: "1.1rem", fontWeight: 600, color: "#1a1c1e" };
+const subtitleStyle: React.CSSProperties = { fontSize: "0.85rem", color: "#64748b" };
+const iconButtonStyle: React.CSSProperties = { position: "relative", background: "#f8fafc", border: "1px solid #e2e8f0", padding: "10px", cursor: "pointer", color: "#475569", borderRadius: "10px", display: "flex", alignItems: "center" };
+const mobileMenuButtonStyle: React.CSSProperties = { ...iconButtonStyle, backgroundColor: "#ffffff" };
+const moreButtonStyle: React.CSSProperties = { ...iconButtonStyle, border: "none", background: "transparent" };
+const avatarPlaceholderStyle: React.CSSProperties = { width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "#000000", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, cursor: "pointer" };
+const searchContainerStyle: React.CSSProperties = { display: "flex", alignItems: "center", gap: "8px", backgroundColor: "#f1f5f9", padding: "8px 16px", borderRadius: "8px",width: "350px" };
+const searchPlaceholderStyle: React.CSSProperties = { fontSize: "14px", color: "#9ca3af" };
+const textGroupStyle: React.CSSProperties = { display: "flex", flexDirection: "column" };
+const notificationBadgeStyle: React.CSSProperties = { position: "absolute", top: "8px", right: "8px", width: "8px", height: "8px", backgroundColor: "#ef4444", borderRadius: "50%", border: "2px solid #ffffff" };
+const flexCenterGap = (gap: number): React.CSSProperties => ({ display: "flex", alignItems: "center", gap: `${gap}px` });

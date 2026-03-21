@@ -1,12 +1,14 @@
 import React from "react";
 import type { User } from "../typs/User";
 import StatusBadge from "./StatusBadge";
+import { FaEye } from "react-icons/fa";
 
 interface Props {
   users: User[];
+  onView?: (user: User) => void;
 }
 
-export default function UsersTableView({ users }: Props) {
+export default function UsersTableView({ users, onView }: Props) {
   if (users.length === 0) {
     return <div style={styles.empty}>No users found</div>;
   }
@@ -21,7 +23,7 @@ export default function UsersTableView({ users }: Props) {
             <th style={styles.th}>Address</th>
             <th style={styles.th}>Birth Date</th>
             <th style={styles.th}>Status</th>
-
+            <th style={{ ...styles.th, textAlign: "right" }}>Actions</th>
           </tr>
         </thead>
 
@@ -37,7 +39,7 @@ export default function UsersTableView({ users }: Props) {
                 (e.currentTarget.style.background = "transparent")
               }
             >
-              {/* User */}
+              {/* USER */}
               <td style={styles.td}>
                 <div style={styles.userCell}>
                   <img
@@ -49,9 +51,7 @@ export default function UsersTableView({ users }: Props) {
                     <div style={styles.name}>
                       {user.first_name} {user.middle_name} {user.last_name}
                     </div>
-                    <div style={styles.subText}>
-                      ID: {user.id}
-                    </div>
+                    <div style={styles.subText}>ID: {user.id}</div>
                   </div>
                 </div>
               </td>
@@ -64,6 +64,18 @@ export default function UsersTableView({ users }: Props) {
                 <StatusBadge status={user.status} />
               </td>
 
+              {/* ACTIONS (ALWAYS VISIBLE) */}
+              <td style={{ ...styles.td, textAlign: "right" }}>
+                <div style={styles.actions}>
+                  <button
+                    style={styles.iconBtn}
+                    onClick={() => onView?.(user)}
+                    title="View"
+                  >
+                    <FaEye />
+                  </button>
+                </div>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -79,7 +91,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     marginTop: 20,
     boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
     overflow: "hidden",
-    
   },
 
   table: {
@@ -135,8 +146,23 @@ const styles: { [key: string]: React.CSSProperties } = {
   actions: {
     display: "flex",
     gap: 8,
+    justifyContent: "flex-end",
   },
 
+  iconBtn: {
+    width: "34px",
+    height: "34px",
+    borderRadius: "8px",
+    border: "1px solid transparent",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "14px",
+    background: "#fff",
+    color: "#111827", // darker so it's visible
+    transition: "all 0.2s ease",
+  },
 
   empty: {
     textAlign: "center",

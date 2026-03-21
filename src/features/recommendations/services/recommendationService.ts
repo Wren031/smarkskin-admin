@@ -2,9 +2,7 @@ import { supabase } from "../../../lib/supabase";
 import type { Recommendation } from "../types/Recommendation";
 
 export const recommendationService = {
-  // =========================
-  // 📥 GET ALL
-  // =========================
+
   async getAll(): Promise<Recommendation[]> {
     const { data, error } = await supabase
       .from("tbl_recommendations")

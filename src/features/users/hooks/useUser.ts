@@ -15,8 +15,8 @@ export default function useUsers() {
 
           const elapsed = Date.now() - start;
   
-          if (elapsed < 1000) {
-            await delay(1000 - elapsed);
+          if (elapsed < 500) {
+            await delay(500 - elapsed);
           }
         setUsers(data);
       } catch (error) {

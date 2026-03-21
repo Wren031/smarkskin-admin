@@ -6,8 +6,7 @@ import { FaPlus, FaSearch } from "react-icons/fa";
 import useCondition from "../hooks/useCondition";
 import styles from "../style/styles";
 
-// ✅ IMPORT REUSABLE COMPONENTS
-import PageLoader from "../../../components/PageLoader";
+
 import SkeletonCards from "../components/SkeletonCards";
 
 export default function SkinCondition() {
@@ -30,7 +29,6 @@ export default function SkinCondition() {
   return (
     <div style={styles.main_content}>
 
-      <PageLoader loading={loading} text="Loading conditions..." />
 
       <div style={styles.header}>
         <TitleSize
@@ -57,7 +55,7 @@ export default function SkinCondition() {
         />
       </div>
 
-      {/* 🔥 SKELETON OR CONTENT */}
+
       <div style={styles.card_container}>
         {loading ? (
           <SkeletonCards count={6} />

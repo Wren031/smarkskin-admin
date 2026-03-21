@@ -1,240 +1,235 @@
-import { useState } from "react";
+import React from "react";
+import {
+  FaEye,
+  FaRegEdit,
+  FaRegTrashAlt,
+} from "react-icons/fa";
 import type { Products } from "../types/Products";
-import { FaEllipsisV } from "react-icons/fa";
 
 interface Props {
   products: Products[];
   onDelete?: (id: number) => void;
   onView?: (product: Products) => void;
+  onUpdate?: (product: Products) => void;
 }
 
-export default function ProductTable({ products, onDelete, onView }: Props) {
-  const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
+export default function ProductTable({
+  products,
+  onDelete,
+  onView,
+  onUpdate,
+}: Props) {
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("en-PH", {
+      style: "currency",
+      currency: "PHP",
+    }).format(value);
+  };
+
+  const getStatusStyles = (status: string) => {
+    const isAvailable = status.toLowerCase() === "available";
+    return {
+      backgroundColor: isAvailable ? "#ECFDF5" : "#FEF2F2",
+      color: isAvailable ? "#059669" : "#DC2626",
+    };
+  };
 
   if (products.length === 0) {
-    return <div style={styles.empty}>No products found</div>;
+    return (
+      <div style={styles.emptyState}>
+        <p>No products available in the inventory.</p>
+      </div>
+    );
   }
 
   return (
-    <div style={styles.wrapper}>
+    <div style={styles.container}>
       <table style={styles.table}>
         <thead>
           <tr>
-            <th style={styles.th}>Product</th>
+            <th style={styles.th}>Product Details</th>
             <th style={styles.th}>Brand</th>
-            <th style={styles.th}>Price</th>
-            <th style={styles.th}>Status</th>
-                        <th style={styles.th}></th>
+            <th style={styles.th}>Unit Price</th>
+            <th style={styles.th}>Stock Status</th>
+            <th style={{ ...styles.th, textAlign: "right" }}>Actions</th>
           </tr>
         </thead>
 
         <tbody>
-          {products.map((product) => {
-            const isMenuOpen = menuOpenId === product.id;
-
-            return (
-              <tr key={product.id} style={styles.tr}>
-                {/* Product Info */}
-                <td style={styles.td}>
-                  <div style={styles.productCell}>
-                    <img src={product.image_url} style={styles.image} />
-                    <div>
-                      <div style={styles.name}>
-                        {product.product_name}
-                      </div>
-                      <div style={styles.description}>
-                        {product.description}
-                      </div>
-                    </div>
+          {products.map((product) => (
+            <tr key={product.id} style={styles.tr}>
+              {/* PRODUCT */}
+              <td style={styles.td}>
+                <div style={styles.productCell}>
+                  <img
+                    src={product.image_url}
+                    alt={product.product_name}
+                    style={styles.image}
+                  />
+                  <div style={styles.textGroup}>
+                    <span style={styles.productName}>
+                      {product.product_name}
+                    </span>
+                    <span style={styles.productDesc}>
+                      {product.description}
+                    </span>
                   </div>
-                </td>
+                </div>
+              </td>
 
-                <td style={styles.td}>{product.brand}</td>
+              {/* BRAND */}
+              <td style={styles.td}>{product.brand}</td>
 
-                <td style={styles.td}>
-                  ₱
-                  {product.price.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                  })}
-                </td>
+              {/* PRICE */}
+              <td style={{ ...styles.td, fontWeight: 600 }}>
+                {formatCurrency(product.price)}
+              </td>
 
-                {/* Status */}
-                <td style={styles.td}>
-                  <span
-                    style={{
-                      ...styles.status,
-                      background:
-                        product.status === "Available"
-                          ? "#dcfce7"
-                          : "#fee2e2",
-                      color:
-                        product.status === "Available"
-                          ? "#16a34a"
-                          : "#dc2626",
-                    }}
+              {/* STATUS */}
+              <td style={styles.td}>
+                <span
+                  style={{
+                    ...styles.badge,
+                    ...getStatusStyles(product.status),
+                  }}
+                >
+                  {product.status}
+                </span>
+              </td>
+
+              {/* ACTION ICONS */}
+              <td style={{ ...styles.td, textAlign: "right" }}>
+                <div style={styles.actions}>
+                  
+                  {/* VIEW */}
+                  <button
+                    style={{...styles.iconBtn,color: "#2563eb",}}
+                    onClick={() => onView?.(product)}
+                    title="View"
                   >
-                    {product.status}
-                  </span>
-                </td>
+                    <FaEye />
+                  </button>
 
-                {/* Actions */}
-                <td style={styles.td}>
-                  <div style={styles.menuWrapper}>
-                    <button
-                      onClick={() =>
-                        setMenuOpenId((prev) =>
-                          prev === product.id ? null : product.id
-                        )
-                      }
-                      style={styles.menuButton}
-                    >
-                      <FaEllipsisV />
-                    </button>
+                  {/* UPDATE */}
+                  <button
+                  
+                    style={{...styles.iconBtn,color: "#d97706",}}
+                    onClick={() => onUpdate?.(product)}
+                    title="Update"
+                  >
+                    <FaRegEdit />
+                  </button>
 
-                    {isMenuOpen && (
-                      <div style={styles.dropdown}>
-                        <button
-                          onClick={() => {
-                            onView?.(product);
-                            setMenuOpenId(null);
-                          }}
-                          style={styles.dropdownItem}
-                        >
-                          Edit
-                        </button>
+                  {/* DELETE */}
+                  <button
+                    style={{ ...styles.iconBtn, color: "#DC2626" }}
+                    onClick={() => onDelete?.(product.id)}
+                    title="Delete"
+                  >
+                    <FaRegTrashAlt />
+                  </button>
 
-                        <button
-                          onClick={() => {
-                            onDelete?.(product.id);
-                            setMenuOpenId(null);
-                          }}
-                          style={{
-                            ...styles.dropdownItem,
-                            color: "#dc2626",
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
+                </div>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
   );
 }
 
-const styles: { [key: string]: React.CSSProperties } = {
-  wrapper: {
-    background: "#fff",
-    borderRadius: 16,
-    boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+/* ================= STYLES ================= */
+
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: "12px",
+    border: "1px solid #E5E7EB",
     overflow: "hidden",
   },
 
   table: {
     width: "100%",
     borderCollapse: "collapse",
+    fontFamily:
+      'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   },
 
   th: {
+    backgroundColor: "#F9FAFB",
+    padding: "12px 24px",
     textAlign: "left",
-    padding: "14px 18px",
-    fontSize: 12,
+    fontSize: "12px",
     fontWeight: 600,
-    color: "#7b7c7c",
-    letterSpacing: "0.05em",
-    textTransform: "uppercase",
-    borderBottom: "1px solid #e2e8f0",
+    color: "#6B7280",
+    borderBottom: "1px solid #E5E7EB",
   },
 
   tr: {
-    borderBottom: "1px solid #f1f5f9",
-    transition: "background 0.2s ease",
+    borderBottom: "1px solid #F3F4F6",
   },
 
   td: {
-    padding: "14px 16px",
-    fontSize: 14,
-    verticalAlign: "middle",
+    padding: "16px 24px",
+    fontSize: "14px",
   },
 
   productCell: {
     display: "flex",
     alignItems: "center",
-    gap: 12,
+    gap: "16px",
   },
 
   image: {
-    width: 50,
-    height: 50,
-    borderRadius: 10,
+    width: "48px",
+    height: "48px",
+    borderRadius: "8px",
     objectFit: "cover",
-    border: "1px solid #e5e7eb",
   },
 
-  name: {
-    fontWeight: 600,
-    fontSize: 14,
+  textGroup: {
+    display: "flex",
+    flexDirection: "column",
   },
 
-  description: {
-    fontSize: 12,
-    color: "#6b7280",
-    maxWidth: 220,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
-
-  status: {
-    padding: "4px 10px",
-    borderRadius: 999,
-    fontSize: 12,
+  productName: {
     fontWeight: 600,
   },
 
-  menuWrapper: {
-    position: "relative",
+  productDesc: {
+    fontSize: "12px",
+    color: "#6B7280",
   },
 
-  menuButton: {
+  badge: {
+    padding: "4px 12px",
+    borderRadius: "9999px",
+    fontSize: "12px",
+    fontWeight: 500,
+  },
+
+  actions: {
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: "10px",
+  },
+
+  iconBtn: {
     border: "none",
     background: "transparent",
     cursor: "pointer",
-    padding: 6,
-    borderRadius: 8,
+    fontSize: "16px",
+    color: "#6B7280",
+    padding: "6px",
+    borderRadius: "6px",
+    transition: "0.2s",
   },
 
-  dropdown: {
-    position: "absolute",
-    top: 28,
-    right: 0,
-    background: "#fff",
-    border: "1px solid #e5e7eb",
-    borderRadius: 10,
-    boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
-    minWidth: 130,
-    zIndex: 10,
-  },
-
-  dropdownItem: {
-    width: "100%",
-    padding: "10px 12px",
-    border: "none",
-    background: "transparent",
-    textAlign: "left",
-    cursor: "pointer",
-    fontSize: 13,
-  },
-
-  empty: {
+  emptyState: {
+    padding: "60px",
     textAlign: "center",
-    padding: 40,
-    color: "#64748b",
+    color: "#6B7280",
   },
 };

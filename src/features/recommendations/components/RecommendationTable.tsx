@@ -1,7 +1,13 @@
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { recommendation as recommendationData } from "../data/recommendations";
 import type { Recommendation } from "../types/Recommendation";
-import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
+import {
+  FaEye,
+  FaRegEdit,
+  FaRegTrashAlt,
+  FaCapsules,
+} from "react-icons/fa";
+
 interface Props {
   recommendation?: Recommendation[];
   onDelete?: (id: number) => void;
@@ -15,29 +21,45 @@ export default function RecommendationTable({
   onView,
   onEdit,
 }: Props) {
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+
   return (
     <div style={styles.container}>
       <table style={styles.table}>
         <thead>
           <tr style={styles.headerRow}>
-            <th style={styles.th}>ID</th>
+            <th style={{ ...styles.th, width: "60px" }}>ID</th>
             <th style={styles.th}>Condition</th>
             <th style={styles.th}>Severity</th>
             <th style={styles.th}>Products</th>
-            <th style={styles.th}>Treatment</th>
-            <th style={styles.th}>Precautions</th>
-            <th style={styles.th}>Actions</th>
+            <th style={styles.th}>Treatment Plan</th>
+            <th style={{ ...styles.th, textAlign: "right" }}>Actions</th>
           </tr>
         </thead>
 
         <tbody>
           {recommendation.map((rec) => (
-            <tr key={rec.id} style={styles.tr}>
-              <td style={styles.td}>{rec.id}</td>
+            <tr
+              key={rec.id}
+              onMouseEnter={() => setHoveredRow(rec.id)}
+              onMouseLeave={() => setHoveredRow(null)}
+              style={{
+                ...styles.tr,
+                backgroundColor:
+                  hoveredRow === rec.id ? "#f9fafb" : "transparent",
+              }}
+            >
+              {/* ID */}
+              <td style={{ ...styles.td, color: "#9ca3af", fontWeight: 500 }}>
+                #{rec.id}
+              </td>
 
-              <td style={styles.td}>{rec.condition.name}</td>
+              {/* CONDITION */}
+              <td style={{ ...styles.td, fontWeight: 600, color: "#111827" }}>
+                {rec.condition.name}
+              </td>
 
-              {/* 🔥 Severity badge */}
+              {/* SEVERITY */}
               <td style={styles.td}>
                 <span
                   style={{
@@ -53,56 +75,69 @@ export default function RecommendationTable({
                 </span>
               </td>
 
-              {/* Products */}
+              {/* PRODUCTS */}
               <td style={styles.td}>
-                {rec.products?.length ? (
-                  rec.products.map((product, index) =>
-                    product ? (
-                      <span key={product.id}>
+                <div style={styles.productContainer}>
+                  {rec.products?.length ? (
+                    rec.products.map((product) => (
+                      <span key={product.id} style={styles.productTag}>
+                        <FaCapsules style={{ marginRight: 4, fontSize: 10 }} />
                         {product.product_name}
-                        {index < rec.products.length - 1 ? ", " : ""}
                       </span>
-                    ) : null
-                  )
-                ) : (
-                  "No products"
-                )}
+                    ))
+                  ) : (
+                    <span
+                      style={{
+                        color: "#9ca3af",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      None linked
+                    </span>
+                  )}
+                </div>
               </td>
 
-              <td style={styles.td}>{rec.treatment}</td>
-              <td style={styles.td}>{rec.precautions}</td>
+              {/* TREATMENT */}
+              <td style={{ ...styles.td, maxWidth: "250px" }}>
+                <div style={styles.treatmentText}>{rec.treatment}</div>
+                <div style={styles.precautionText}>
+                  {rec.precautions}
+                </div>
+              </td>
 
-            <td style={styles.td}>
-            <div style={styles.actions}>
-                {onView && (
-                <button
-                    style={{ ...styles.iconButton, ...styles.viewBtn }}
-                    onClick={() => onView(rec)}
-                    title="View"
-                >
-                    <FaEye />
-                </button>
-                )}
+              {/* ACTIONS */}
+              <td style={{ ...styles.td, textAlign: "right" }}>
+                <div style={styles.actions}>
+                  {onView && (
+                    <button
+                      style={{ ...styles.iconButton, ...styles.viewBtn }}
+                      onClick={() => onView(rec)}
+                      title="View Details"
+                    >
+                      <FaEye />
+                    </button>
+                  )}
 
-                <button
-                style={{ ...styles.iconButton, ...styles.editBtn }}
-                onClick={() => onEdit(rec)}
-                title="Edit"
-                >
-                <FaEdit />
-                </button>
+                  <button
+                    style={{ ...styles.iconButton, ...styles.editBtn }}
+                    onClick={() => onEdit(rec)}
+                    title="Edit Entry"
+                  >
+                    <FaRegEdit />
+                  </button>
 
-                {onDelete && (
-                <button
-                    style={{ ...styles.iconButton, ...styles.deleteBtn }}
-                    onClick={() => onDelete(rec.id)}
-                    title="Delete"
-                >
-                    <FaTrash />
-                </button>
-                )}
-            </div>
-            </td>
+                  {onDelete && (
+                    <button
+                      style={{ ...styles.iconButton, ...styles.deleteBtn }}
+                      onClick={() => onDelete(rec.id)}
+                      title="Remove"
+                    >
+                      <FaRegTrashAlt />
+                    </button>
+                  )}
+                </div>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -111,99 +146,132 @@ export default function RecommendationTable({
   );
 }
 
+/* ================= STYLES ================= */
+
 const styles: Record<string, CSSProperties> = {
   container: {
-    marginTop: 20,
-    background: "#fff",
-    borderRadius: 12,
-    boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-    overflowX: "auto", // ✅ mobile scroll
+    margin: "24px 0",
+    background: "#ffffff",
+    borderRadius: "12px",
+    border: "1px solid #e5e7eb",
+    boxShadow:
+      "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+    overflow: "hidden",
   },
 
   table: {
     width: "100%",
     borderCollapse: "collapse",
-    fontSize: "clamp(12px, 1.2vw, 14px)",
-    minWidth: "900px", // ✅ prevents squishing
+    fontFamily: "'Inter', system-ui, sans-serif",
+    fontSize: "14px",
+    lineHeight: "1.5",
   },
 
   headerRow: {
-    background: "#f9fafb",
-    textAlign: "left",
+    background: "#f8fafc",
+    borderBottom: "1px solid #e5e7eb",
   },
 
   th: {
-    padding: "12px 16px",
+    padding: "14px 20px",
     fontWeight: 600,
-    borderBottom: "1px solid #eee",
-    whiteSpace: "nowrap", // ✅ keeps headers clean
+    color: "#4b5563",
+    textTransform: "uppercase",
+    fontSize: "12px",
+    letterSpacing: "0.05em",
+    textAlign: "left",
   },
 
   tr: {
-    borderBottom: "1px solid #f1f1f1",
+    borderBottom: "1px solid #f3f4f6",
+    transition: "background-color 0.2s ease",
   },
 
   td: {
-    padding: "12px 16px",
-    verticalAlign: "top",
-    wordBreak: "break-word", // ✅ prevents overflow
+    padding: "16px 20px",
+    verticalAlign: "middle",
+    color: "#374151",
+  },
+
+  productContainer: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "6px",
+  },
+
+  productTag: {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "2px 8px",
+    background: "#f3f4f6",
+    borderRadius: "6px",
+    fontSize: "12px",
+    color: "#4b5563",
+    border: "1px solid #e5e7eb",
+  },
+
+  treatmentText: {
+    fontWeight: 500,
+    marginBottom: "4px",
+    display: "-webkit-box",
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
+  },
+
+  precautionText: {
+    fontSize: "12px",
+    color: "#6b7280",
   },
 
   actions: {
-    display: "flex",
-    gap: 6,
-    flexWrap: "wrap", // ✅ prevents button overflow
+    display: "inline-flex",
+    gap: "8px",
+    justifyContent: "flex-end",
   },
 
   iconButton: {
-    width: "clamp(28px, 4vw, 32px)",
-    height: "clamp(28px, 4vw, 32px)",
-    borderRadius: 8,
-    border: "none",
+    width: "34px",
+    height: "34px",
+    borderRadius: "8px",
+    border: "1px solid transparent",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "clamp(12px, 1.5vw, 14px)",
-    transition: "0.2s ease",
+    fontSize: "16px",
+    transition: "all 0.2s ease",
   },
 
   viewBtn: {
-    background: "#e0f2fe",
-    color: "#0369a1",
+
+    color: "#2563eb",
+
   },
 
   editBtn: {
-    background: "#fef3c7",
-    color: "#92400e",
+
+    color: "#d97706",
+
   },
 
   deleteBtn: {
-    background: "#fee2e2",
-    color: "#991b1b",
+
+    color: "#dc2626",
+
   },
 
   badge: {
-    padding: "4px 8px",
-    borderRadius: 999,
-    fontSize: "clamp(10px, 1vw, 12px)",
-    fontWeight: 500,
+    padding: "4px 10px",
+    borderRadius: "20px",
+    fontSize: "11px",
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: "0.025em",
     display: "inline-block",
-    whiteSpace: "nowrap",
   },
 
-  mild: {
-    background: "#dcfce7",
-    color: "#166534",
-  },
-
-  moderate: {
-    background: "#fef9c3",
-    color: "#854d0e",
-  },
-
-  severe: {
-    background: "#fee2e2",
-    color: "#991b1b",
-  },
+  mild: { background: "#ecfdf5", color: "#065f46" },
+  moderate: { background: "#fffbeb", color: "#92400e" },
+  severe: { background: "#fef2f2", color: "#991b1b" },
 };

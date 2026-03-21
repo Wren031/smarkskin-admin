@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -8,9 +8,15 @@ import {
   FileText,
   Settings,
   User,
+  ScanFace,
+  LogOut,
 } from "lucide-react";
-import { ScanFace  } from "lucide-react";
 
+type MenuItem = {
+  to: string;
+  label: string;
+  icon: React.ElementType;
+};
 
 type SidebarProps = {
   collapsed: boolean;
@@ -21,127 +27,162 @@ type SidebarProps = {
   onLogout: () => void;
 };
 
-type MenuItem = {
-  to: string;
-  label: string;
-  icon: React.ReactNode;
-};
-
-const iconSize = 20;
-
 const MENU: MenuItem[] = [
-  { to: "/dashboard", label: "DASHBOARD", icon: <LayoutDashboard size={iconSize} strokeWidth={1.8} /> },
-  { to: "/users", label: "USERS", icon: <Users size={iconSize} strokeWidth={1.8} /> },
-  { to: "/products", label: "PRODUCTS", icon: <Package  size={iconSize} strokeWidth={1.8} /> },
-  { to: "/recommendation", label: "RECOMMENDATIONS", icon: <Sparkles  size={iconSize} strokeWidth={1.8}/>},
-  { to: "/condition", label: "SKIN CONDITION", icon: <ScanFace   size={iconSize} strokeWidth={1.8}/>},
-  { to: "/reports", label: "REPORT", icon: <FileText size={iconSize} strokeWidth={1.8} /> },
-  { to: "/settings", label: "SETTINGS", icon: <Settings size={iconSize} strokeWidth={1.8} /> },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/users", label: "Users", icon: Users },
+  { to: "/products", label: "Products", icon: Package },
+  { to: "/recommendation", label: "Recommendations", icon: Sparkles },
+  { to: "/condition", label: "Skin Condition", icon: ScanFace },
+  { to: "/reports", label: "Reports", icon: FileText },
+  { to: "/settings", label: "Settings", icon: Settings },
 ];
 
-export default function Sidebar({ collapsed, user }: SidebarProps) {
+export default function Sidebar({ collapsed, user, onLogout }: SidebarProps) {
+  const [hoveredPath, setHoveredPath] = useState<string | null>(null);
+  const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
+
+  const isExpanded = !collapsed || isHoveringSidebar;
+
   return (
     <aside
+      onMouseEnter={() => setIsHoveringSidebar(true)}
+      onMouseLeave={() => setIsHoveringSidebar(false)}
       style={{
-        width: collapsed ? 88 : 260,
+        width: isExpanded ? 280 : 80,
         height: "100vh",
-        overflow: "hidden", // ✅ prevent sidebar scroll
         backgroundColor: "#ffffff",
-        borderRight: "1px solid #e5e7eb",
+        borderRight: "1px solid #f0f0f0",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
-        transition: "width 0.25s ease",
+        transition: "width 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+        fontFamily: "'Inter', sans-serif",
+        overflow: "hidden",
       }}
     >
-      <div>
-        {/* User Profile */}
-        <div
-          style={{
-            padding: collapsed ? "20px 12px" : "28px 20px",
-            borderBottom: "1px solid #e5e7eb",
-            backgroundColor: "#ffffff",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: collapsed ? "center" : "flex-start",
-              gap: 16,
-            }}
-          >
-            {/* Avatar */}
-            <div
-              style={{
-                width: collapsed ? 38 : 54,
-                height: collapsed ? 38 : 54,
-                borderRadius: "50%",
-                backgroundColor: "#ffffff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 0 0 4px #dedede",
-              }}
-            >
-              <User size={30} strokeWidth={1} color="#000000" />
-            </div>
-
-            {!collapsed && (
-              <div>
-                <div
-                  style={{
-                    fontSize: 20,
-                    fontWeight: 700,
-                    letterSpacing: 1,
-                    color: "#111827",
-                  }}
-                >
-                  {user.name.toUpperCase()}
-                </div>
-                <div
-                  style={{
-                    fontSize: 14,
-                    color: "#6b7280",
-                    marginTop: 4,
-                  }}
-                >
-                  {user.phone}
-                </div>
-              </div>
-            )}
+      {/* Profile Section */}
+      <div style={{ 
+        padding: isExpanded ? "20px 14px" : "24px 0", 
+        justifyContent: "center"
+      }}>
+        <div style={{ 
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: isExpanded ? "flex-start" : "center", 
+          gap: 12,
+          width: isExpanded ? "100%" : "auto"
+        }}>
+          <div style={{
+            width: 42, height: 42, borderRadius: 10, backgroundColor: "#f9fafb",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid #e5e7eb"
+          }}>
+            <User size={20} color="#111827" />
+          </div>
+          <div style={{ 
+            opacity: isExpanded ? 1 : 0, 
+            width: isExpanded ? "auto" : 0, // Shrink width to 0 to prevent ghost spacing
+            transition: "opacity 0.2s ease, width 0.2s ease",
+            visibility: isExpanded ? "visible" : "hidden",
+            whiteSpace: "nowrap" 
+          }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{user.name}</div>
+            <div style={{ fontSize: 12, color: "#6b7280" }}>{user.phone}</div>
           </div>
         </div>
+      </div>
 
-        {/* Navigation */}
-        <nav style={{ padding: "16px 12px", marginTop: 20 }}>
-          {MENU.map((item) => (
+      <nav style={{ 
+        flex: 1, 
+        padding: isExpanded ? "0 12px" : "0 8px", 
+        marginTop: 8,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center" // Ensures items stack centrally
+      }}>
+        {MENU.map((item) => {
+          const Icon = item.icon;
+          const isHoveredItem = hoveredPath === item.to;
+
+          return (
             <NavLink
               key={item.to}
               to={item.to}
+              onMouseEnter={() => setHoveredPath(item.to)}
+              onMouseLeave={() => setHoveredPath(null)}
               style={({ isActive }) => ({
                 display: "flex",
                 alignItems: "center",
-                justifyContent: collapsed ? "center" : "flex-start",
-                gap: 14,
-                padding: collapsed ? "12px" : "12px 18px",
-                marginBottom: 8,
-                borderRadius: 6,
+                justifyContent: isExpanded ? "flex-start" : "center",
+                gap: isExpanded ? 12 : 0, // No gap when collapsed to keep icon centered
+                padding: "12px",
+                width: "100%", // Ensures the background color fills the hover area
+                boxSizing: "border-box",
+                marginBottom: 4,
+                borderRadius: 8,
                 textDecoration: "none",
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: 500,
                 transition: "all 0.2s ease",
-                color: isActive ? "#ffffff" : "#535353",
-                backgroundColor: isActive ? "#000000" : "transparent",
+                color: isActive ? "#ffffff" : isHoveredItem ? "#ffffff" : "#6b7280",
+                backgroundColor: isActive ? "#000000" : isHoveredItem ? "#000000" : "transparent",
               })}
             >
-              {item.icon}
-              {!collapsed && <span>{item.label}</span>}
+              <Icon size={20} strokeWidth={1.8} style={{ flexShrink: 0 }} />
+              <span style={{ 
+                opacity: isExpanded ? 1 : 0, 
+                width: isExpanded ? "auto" : 0,
+                overflow: "hidden",
+                transition: "opacity 0.2s ease, width 0.2s ease",
+                visibility: isExpanded ? "visible" : "hidden",
+                whiteSpace: "nowrap"
+              }}>
+                {item.label}
+              </span>
             </NavLink>
-          ))}
-        </nav>
-      </div>
+          );
+        })}
+      </nav>
 
+      {/* Logout */}
+      <div style={{ 
+        padding: isExpanded ? "16px 12px" : "16px 8px", 
+        borderTop: "1px solid #f3f4f6",
+        display: "flex",
+        justifyContent: "center"
+      }}>
+        <button
+          onClick={onLogout}
+          onMouseEnter={() => setHoveredPath("logout")}
+          onMouseLeave={() => setHoveredPath(null)}
+          style={{
+            width: "100%", 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: isExpanded ? "flex-start" : "center",
+            gap: isExpanded ? 12 : 0, 
+            padding: "12px", 
+            border: "none", 
+            cursor: "pointer", 
+            borderRadius: 8, 
+            fontSize: 14, 
+            fontWeight: 500,
+            transition: "all 0.2s", 
+            color: "#dc2626",
+            backgroundColor: hoveredPath === "logout" ? "#fee2e2" : "transparent",
+          }}
+        >
+          <LogOut size={20} style={{ flexShrink: 0 }} />
+          <span style={{ 
+            opacity: isExpanded ? 1 : 0, 
+            width: isExpanded ? "auto" : 0,
+            overflow: "hidden",
+            transition: "opacity 0.2s ease, width 0.2s ease",
+            visibility: isExpanded ? "visible" : "hidden",
+            whiteSpace: "nowrap"
+          }}>
+            Logout
+          </span>
+        </button>
+      </div>
     </aside>
   );
 }
