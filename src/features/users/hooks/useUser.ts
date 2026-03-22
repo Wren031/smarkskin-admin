@@ -7,6 +7,8 @@ export default function useUsers() {
   const [loading, setLoading] = useState(true);
   const start = Date.now();
 
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -30,5 +32,13 @@ export default function useUsers() {
     fetchUsers();
   }, []);
 
-  return { users, loading };
+  const getUserById = async (id: number) => {
+    const user = await adminService.getUserById(id);
+    setSelectedUser(user);
+    return user;
+  };
+
+  const clearSelection = () => setSelectedUser(null);
+
+  return { users, selectedUser, loading, getUserById, clearSelection };
 }

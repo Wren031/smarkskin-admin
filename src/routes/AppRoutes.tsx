@@ -9,7 +9,7 @@ import RecommendationPage from "../features/recommendations/page/RecommendationP
 
 import SkinConditionPage from "../features/condition/page/SkinConditionPage";
 import AddRecommendationsPage from "../features/recommendations/page/AddRecommendationsPage";
-
+import ReportPage from "../features/reports/page/ReportPage";
 export default function AppRoutes() {
   return (
     <BrowserRouter>
@@ -23,7 +23,7 @@ export default function AppRoutes() {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="products" element={<ProductPage />} />
           <Route path="recommendation" element={<RecommendationPage />} />
-          
+          <Route path="report" element={<ReportPage />} />
           <Route path="recommendation/add" element={<AddRecommendationsPage />} />
           <Route path="condition" element={<SkinConditionPage />} />
 

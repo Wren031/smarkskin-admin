@@ -17,4 +17,18 @@ export const adminService = {
     return data ?? [];
   },
 
+  async getUserById(id: number): Promise<User | null> {
+    const { data, error } = await supabase
+      .from("tbl_profiles")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      console.error(error);
+      throw error;
+    }
+    return data;
+  },
+
 };

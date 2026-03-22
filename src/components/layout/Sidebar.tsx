@@ -33,7 +33,7 @@ const MENU: MenuItem[] = [
   { to: "/products", label: "Products", icon: Package },
   { to: "/recommendation", label: "Recommendations", icon: Sparkles },
   { to: "/condition", label: "Skin Condition", icon: ScanFace },
-  { to: "/reports", label: "Reports", icon: FileText },
+  { to: "/report", label: "Reports", icon: FileText },
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 

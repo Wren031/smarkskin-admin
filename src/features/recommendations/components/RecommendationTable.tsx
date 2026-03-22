@@ -31,8 +31,9 @@ export default function RecommendationTable({
             <th style={{ ...styles.th, width: "60px" }}>ID</th>
             <th style={styles.th}>Condition</th>
             <th style={styles.th}>Severity</th>
-            <th style={styles.th}>Products</th>
             <th style={styles.th}>Treatment Plan</th>
+            <th style={styles.th}>Products</th>
+            <th style={styles.th}>Precautions Plan</th>
             <th style={{ ...styles.th, textAlign: "right" }}>Actions</th>
           </tr>
         </thead>
@@ -75,6 +76,15 @@ export default function RecommendationTable({
                 </span>
               </td>
 
+              {/* TREATMENT */}
+              <td style={{ ...styles.td, maxWidth: "250px" }}>
+                <div style={styles.treatmentText}>
+                  {rec.treatment || (
+                    <span style={styles.emptyText}>No treatment</span>
+                  )}
+                </div>
+              </td>
+
               {/* PRODUCTS */}
               <td style={styles.td}>
                 <div style={styles.productContainer}>
@@ -86,23 +96,19 @@ export default function RecommendationTable({
                       </span>
                     ))
                   ) : (
-                    <span
-                      style={{
-                        color: "#9ca3af",
-                        fontStyle: "italic",
-                      }}
-                    >
-                      None linked
-                    </span>
+                    <span style={styles.emptyText}>None linked</span>
                   )}
                 </div>
               </td>
 
-              {/* TREATMENT */}
+              {/* PRECAUTIONS */}
               <td style={{ ...styles.td, maxWidth: "250px" }}>
-                <div style={styles.treatmentText}>{rec.treatment}</div>
                 <div style={styles.precautionText}>
-                  {rec.precautions}
+                  {rec.precautions ? (
+                    rec.precautions
+                  ) : (
+                    <span style={styles.emptyText}>No precautions</span>
+                  )}
                 </div>
               </td>
 
@@ -212,7 +218,6 @@ const styles: Record<string, CSSProperties> = {
 
   treatmentText: {
     fontWeight: 500,
-    marginBottom: "4px",
     display: "-webkit-box",
     WebkitLineClamp: 2,
     WebkitBoxOrient: "vertical",
@@ -222,6 +227,15 @@ const styles: Record<string, CSSProperties> = {
   precautionText: {
     fontSize: "12px",
     color: "#6b7280",
+    background: "#f9fafb",
+    padding: "6px 8px",
+    borderRadius: "6px",
+    border: "1px dashed #e5e7eb",
+  },
+
+  emptyText: {
+    color: "#9ca3af",
+    fontStyle: "italic",
   },
 
   actions: {
@@ -243,23 +257,9 @@ const styles: Record<string, CSSProperties> = {
     transition: "all 0.2s ease",
   },
 
-  viewBtn: {
-
-    color: "#2563eb",
-
-  },
-
-  editBtn: {
-
-    color: "#d97706",
-
-  },
-
-  deleteBtn: {
-
-    color: "#dc2626",
-
-  },
+  viewBtn: { color: "#2563eb" },
+  editBtn: { color: "#d97706" },
+  deleteBtn: { color: "#dc2626" },
 
   badge: {
     padding: "4px 10px",

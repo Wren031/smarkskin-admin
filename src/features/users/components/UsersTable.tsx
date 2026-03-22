@@ -72,7 +72,7 @@ export default function UsersTableView({ users, onView }: Props) {
                     onClick={() => onView?.(user)}
                     title="View"
                   >
-                    <FaEye />
+                    View
                   </button>
                 </div>
               </td>
@@ -150,7 +150,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
 
   iconBtn: {
-    width: "34px",
+    width: "80px",
     height: "34px",
     borderRadius: "8px",
     border: "1px solid transparent",
@@ -159,8 +159,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: "center",
     justifyContent: "center",
     fontSize: "14px",
-    background: "#fff",
-    color: "#111827", // darker so it's visible
+    background: "#000000",
+    color: "#ffffff",
     transition: "all 0.2s ease",
   },
 

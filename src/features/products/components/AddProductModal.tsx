@@ -12,6 +12,7 @@ interface Props {
 }
 
 export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
+  
 
   const initialForm: Omit<Products, "id"> = {
     product_name: "",
@@ -49,64 +50,66 @@ export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
     setPreview(URL.createObjectURL(selected)); // preview only
   };
 
-  // ✅ SUBMIT (UPLOAD + SAVE)
-  const handleSubmit = async () => {
-    if (!form.product_name.trim()) {
-      toast.error("Product name is required");
-      return;
-    }
+const handleSubmit = async () => {
+  if (!form.product_name.trim()) {
+    toast.error("Product name is required");
+    return;
+  }
 
-    if (!form.brand.trim()) {
-      toast.error("Brand is required");
-      return;
-    }
+  if (!form.brand.trim()) {
+    toast.error("Brand is required");
+    return;
+  }
 
-    if (!form.price || form.price <= 0) {
-      toast.error("Price must be greater than 0");
-      return;
-    }
+  if (!form.price || form.price <= 0) {
+    toast.error("Price must be greater than 0");
+    return;
+  }
 
-    const loadingToast = toast.loading("Saving product...");
+  const loadingToast = toast.loading("Saving product...");
 
-    try {
-      let imageUrl = form.image_url;
+  try {
+    let imageUrl = ""; // ✅ start empty
 
-      // ✅ Upload image if selected
-      if (file) {
-        const uploaded = await productServices.uploadImage(file);
+    // ✅ Upload image FIRST
+    if (file) {
+      const uploaded = await productServices.uploadImage(file);
 
-        if (!uploaded) {
-          toast.dismiss(loadingToast);
-          toast.error("Image upload failed");
-          return;
-        }
-
-        imageUrl = uploaded; // ✅ real Supabase URL
+      if (!uploaded) {
+        toast.dismiss(loadingToast);
+        toast.error("Image upload failed");
+        return;
       }
 
-      // ✅ Save to DB
-      await onSave({
-        ...form,
-        image_url: imageUrl,
-      });
-
-      toast.dismiss(loadingToast);
-      toast.success("Product added successfully 🎉");
-
-      // reset
-      setForm(initialForm);
-      setPreview("");
-      setFile(null);
-
-      onClose();
-
-    } catch (err) {
-      toast.dismiss(loadingToast);
-      toast.error("Failed to add product");
-      console.error(err);
+      imageUrl = uploaded; // ✅ store returned PUBLIC URL
     }
-  };
 
+    // ❗ IMPORTANT: ensure image_url is always set
+    const productToSave = {
+      ...form,
+      image_url: imageUrl, // ✅ guaranteed correct value
+    };
+
+    console.log("Saving product:", productToSave); // 🔍 DEBUG
+
+    await onSave(productToSave);
+
+    toast.dismiss(loadingToast);
+    toast.success("Product added successfully 🎉");
+
+    // reset
+    setForm(initialForm);
+    setPreview("");
+    setFile(null);
+
+    onClose();
+
+  } catch (err) {
+    toast.dismiss(loadingToast);
+    toast.error("Failed to add product");
+    console.error(err);
+  }
+};
   return (
     <div style={styles.overlay}>
       <div style={styles.modal}>
