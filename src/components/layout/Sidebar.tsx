@@ -10,31 +10,25 @@ import {
   User,
   ScanFace,
   LogOut,
+  UserRoundSearch,
 } from "lucide-react";
 
-type MenuItem = {
-  to: string;
-  label: string;
-  icon: React.ElementType;
-};
-
+type MenuItem = { to: string; label: string; icon: React.ElementType };
 type SidebarProps = {
   collapsed: boolean;
-  user: {
-    name: string;
-    phone: string;
-  };
+  user: { name: string; phone: string };
   onLogout: () => void;
 };
 
 const MENU: MenuItem[] = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/users", label: "Users", icon: Users },
-  { to: "/products", label: "Products", icon: Package },
-  { to: "/recommendation", label: "Recommendations", icon: Sparkles },
-  { to: "/condition", label: "Skin Condition", icon: ScanFace },
-  { to: "/report", label: "Reports", icon: FileText },
-  { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/admin/users", label: "Users", icon: Users },
+  { to: "/admin/products", label: "Products", icon: Package },
+  { to: "/admin/recommendation", label: "Recommendations", icon: Sparkles },
+  { to: "/admin/condition", label: "Skin Condition", icon: ScanFace },
+  { to: "/admin/users-scan", label: "Users Scan", icon: UserRoundSearch },
+  { to: "/admin/report", label: "Reports", icon: FileText },
+  { to: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 export default function Sidebar({ collapsed, user, onLogout }: SidebarProps) {
@@ -51,52 +45,49 @@ export default function Sidebar({ collapsed, user, onLogout }: SidebarProps) {
         width: isExpanded ? 280 : 80,
         height: "100vh",
         backgroundColor: "#ffffff",
-        borderRight: "1px solid #f0f0f0",
+        borderRight: "1px solid #f1f5f9",
         display: "flex",
         flexDirection: "column",
-        transition: "width 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+        transition: "width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
         fontFamily: "'Inter', sans-serif",
         overflow: "hidden",
+        position: "sticky",
+        top: 0,
+        zIndex: 100
       }}
     >
-      {/* Profile Section */}
-      <div style={{ 
-        padding: isExpanded ? "20px 14px" : "24px 0", 
-        justifyContent: "center"
-      }}>
+      {/* Brand / Profile Area */}
+      <div style={{ padding: isExpanded ? "32px 24px" : "32px 0", transition: "0.3s" }}>
         <div style={{ 
           display: "flex", 
           alignItems: "center", 
           justifyContent: isExpanded ? "flex-start" : "center", 
-          gap: 12,
-          width: isExpanded ? "100%" : "auto"
+          gap: 16 
         }}>
           <div style={{
-            width: 42, height: 42, borderRadius: 10, backgroundColor: "#f9fafb",
-            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid #e5e7eb"
+            width: 44, height: 44, borderRadius: 14, 
+            backgroundColor: "#0f172a", // Dark professional background
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+            boxShadow: "0 4px 12px rgba(15, 23, 42, 0.15)"
           }}>
-            <User size={20} color="#111827" />
+            <User size={22} color="#ffffff" />
           </div>
-          <div style={{ 
-            opacity: isExpanded ? 1 : 0, 
-            width: isExpanded ? "auto" : 0, // Shrink width to 0 to prevent ghost spacing
-            transition: "opacity 0.2s ease, width 0.2s ease",
-            visibility: isExpanded ? "visible" : "hidden",
-            whiteSpace: "nowrap" 
-          }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{user.name}</div>
-            <div style={{ fontSize: 12, color: "#6b7280" }}>{user.phone}</div>
-          </div>
+          {isExpanded && (
+            <div style={{ whiteSpace: "nowrap" }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.3px" }}>{user.name}</div>
+              <div style={{ fontSize: 12, color: "#94a3b8", fontWeight: 500 }}>{user.phone}</div>
+            </div>
+          )}
         </div>
       </div>
 
+      {/* Navigation */}
       <nav style={{ 
         flex: 1, 
-        padding: isExpanded ? "0 12px" : "0 8px", 
-        marginTop: 8,
+        padding: isExpanded ? "0 16px" : "0 12px", 
         display: "flex",
         flexDirection: "column",
-        alignItems: "center" // Ensures items stack centrally
+        gap: "4px"
       }}>
         {MENU.map((item) => {
           const Icon = item.icon;
@@ -112,42 +103,44 @@ export default function Sidebar({ collapsed, user, onLogout }: SidebarProps) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: isExpanded ? "flex-start" : "center",
-                gap: isExpanded ? 12 : 0, // No gap when collapsed to keep icon centered
                 padding: "12px",
-                width: "100%", // Ensures the background color fills the hover area
-                boxSizing: "border-box",
-                marginBottom: 4,
-                borderRadius: 8,
+                borderRadius: "12px",
                 textDecoration: "none",
-                fontSize: 14,
-                fontWeight: 500,
-                transition: "all 0.2s ease",
-                color: isActive ? "#ffffff" : isHoveredItem ? "#ffffff" : "#6b7280",
-                backgroundColor: isActive ? "#000000" : isHoveredItem ? "#000000" : "transparent",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                backgroundColor: isActive ? "#0f172a" : isHoveredItem ? "#f8fafc" : "transparent",
               })}
             >
-              <Icon size={20} strokeWidth={1.8} style={{ flexShrink: 0 }} />
-              <span style={{ 
-                opacity: isExpanded ? 1 : 0, 
-                width: isExpanded ? "auto" : 0,
-                overflow: "hidden",
-                transition: "opacity 0.2s ease, width 0.2s ease",
-                visibility: isExpanded ? "visible" : "hidden",
-                whiteSpace: "nowrap"
-              }}>
-                {item.label}
-              </span>
+              {({ isActive }) => (
+                <>
+                  <Icon 
+                    size={20} 
+                    color={isActive ? "#ffffff" : isHoveredItem ? "#0f172a" : "#64748b"}
+                    strokeWidth={isActive ? 2.2 : 1.8} 
+                    style={{ flexShrink: 0, transition: "0.2s" }} 
+                  />
+                  {isExpanded && (
+                    <span style={{ 
+                      marginLeft: 14,
+                      fontSize: 14,
+                      fontWeight: isActive ? 600 : 500,
+                      color: isActive ? "#ffffff" : isHoveredItem ? "#0f172a" : "#64748b",
+                      whiteSpace: "nowrap",
+                      transition: "0.2s"
+                    }}>
+                      {item.label}
+                    </span>
+                  )}
+                </>
+              )}
             </NavLink>
           );
         })}
       </nav>
 
-      {/* Logout */}
+      {/* Logout Footer */}
       <div style={{ 
-        padding: isExpanded ? "16px 12px" : "16px 8px", 
-        borderTop: "1px solid #f3f4f6",
-        display: "flex",
-        justifyContent: "center"
+        padding: "24px 16px", 
+        borderTop: "1px solid #f1f5f9" 
       }}>
         <button
           onClick={onLogout}
@@ -158,29 +151,26 @@ export default function Sidebar({ collapsed, user, onLogout }: SidebarProps) {
             display: "flex", 
             alignItems: "center", 
             justifyContent: isExpanded ? "flex-start" : "center",
-            gap: isExpanded ? 12 : 0, 
             padding: "12px", 
             border: "none", 
             cursor: "pointer", 
-            borderRadius: 8, 
-            fontSize: 14, 
-            fontWeight: 500,
-            transition: "all 0.2s", 
-            color: "#dc2626",
-            backgroundColor: hoveredPath === "logout" ? "#fee2e2" : "transparent",
+            borderRadius: "12px", 
+            transition: "0.2s", 
+            backgroundColor: hoveredPath === "logout" ? "#fff1f2" : "transparent",
           }}
         >
-          <LogOut size={20} style={{ flexShrink: 0 }} />
-          <span style={{ 
-            opacity: isExpanded ? 1 : 0, 
-            width: isExpanded ? "auto" : 0,
-            overflow: "hidden",
-            transition: "opacity 0.2s ease, width 0.2s ease",
-            visibility: isExpanded ? "visible" : "hidden",
-            whiteSpace: "nowrap"
-          }}>
-            Logout
-          </span>
+          <LogOut size={20} color="#e11d48" style={{ flexShrink: 0 }} />
+          {isExpanded && (
+            <span style={{ 
+              marginLeft: 14, 
+              fontSize: 14, 
+              fontWeight: 600, 
+              color: "#e11d48",
+              whiteSpace: "nowrap" 
+            }}>
+              Sign Out
+            </span>
+          )}
         </button>
       </div>
     </aside>

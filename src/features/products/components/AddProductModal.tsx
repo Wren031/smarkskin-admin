@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { FaPlus } from "react-icons/fa";
+import { useState, useEffect } from "react";
+import { FaPlus, FaTimes } from "react-icons/fa";
 import type { CSSProperties } from "react";
 import type { Products } from "../types/Products";
 import toast from "react-hot-toast";
@@ -11,9 +11,7 @@ interface Props {
   onSave: (product: Omit<Products, "id">) => Promise<void>;
 }
 
-export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
-  
-
+export default function AddProductDrawer({ isOpen, onClose, onSave }: Props) {
   const initialForm: Omit<Products, "id"> = {
     product_name: "",
     brand: "",
@@ -25,103 +23,97 @@ export default function AddProductModal({ isOpen, onClose, onSave }: Props) {
 
   const [form, setForm] = useState(initialForm);
   const [preview, setPreview] = useState<string>("");
-  const [file, setFile] = useState<File | null>(null); // ✅ FIX
+  const [file, setFile] = useState<File | null>(null);
 
-  if (!isOpen) return null;
+  // Prevent scrolling when drawer is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => { document.body.style.overflow = "unset"; };
+  }, [isOpen]);
 
-  // ✅ HANDLE INPUT CHANGE
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-
     setForm((prev) => ({
       ...prev,
       [name]: name === "price" ? Number(value) : value,
     }));
   };
 
-  // ✅ HANDLE IMAGE SELECT (preview only)
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (!selected) return;
-
-    setFile(selected); // ✅ store file
-    setPreview(URL.createObjectURL(selected)); // preview only
+    setFile(selected);
+    setPreview(URL.createObjectURL(selected));
   };
 
-const handleSubmit = async () => {
-  if (!form.product_name.trim()) {
-    toast.error("Product name is required");
-    return;
-  }
+  const handleSubmit = async () => {
+    if (!form.product_name.trim()) { toast.error("Product name is required"); return; }
+    if (!form.brand.trim()) { toast.error("Brand is required"); return; }
+    if (!form.price || form.price <= 0) { toast.error("Price must be greater than 0"); return; }
 
-  if (!form.brand.trim()) {
-    toast.error("Brand is required");
-    return;
-  }
+    const loadingToast = toast.loading("Saving product...");
 
-  if (!form.price || form.price <= 0) {
-    toast.error("Price must be greater than 0");
-    return;
-  }
-
-  const loadingToast = toast.loading("Saving product...");
-
-  try {
-    let imageUrl = ""; // ✅ start empty
-
-    // ✅ Upload image FIRST
-    if (file) {
-      const uploaded = await productServices.uploadImage(file);
-
-      if (!uploaded) {
-        toast.dismiss(loadingToast);
-        toast.error("Image upload failed");
-        return;
+    try {
+      let imageUrl = "";
+      if (file) {
+        const uploaded = await productServices.uploadImage(file);
+        if (!uploaded) {
+          toast.dismiss(loadingToast);
+          toast.error("Image upload failed");
+          return;
+        }
+        imageUrl = uploaded;
       }
 
-      imageUrl = uploaded; // ✅ store returned PUBLIC URL
+      const productToSave = { ...form, image_url: imageUrl };
+      await onSave(productToSave);
+
+      toast.dismiss(loadingToast);
+      toast.success("Product added successfully 🎉");
+
+      setForm(initialForm);
+      setPreview("");
+      setFile(null);
+      onClose();
+    } catch (err) {
+      toast.dismiss(loadingToast);
+      toast.error("Failed to add product");
+      console.error(err);
     }
+  };
 
-    // ❗ IMPORTANT: ensure image_url is always set
-    const productToSave = {
-      ...form,
-      image_url: imageUrl, // ✅ guaranteed correct value
-    };
-
-    console.log("Saving product:", productToSave); // 🔍 DEBUG
-
-    await onSave(productToSave);
-
-    toast.dismiss(loadingToast);
-    toast.success("Product added successfully 🎉");
-
-    // reset
-    setForm(initialForm);
-    setPreview("");
-    setFile(null);
-
-    onClose();
-
-  } catch (err) {
-    toast.dismiss(loadingToast);
-    toast.error("Failed to add product");
-    console.error(err);
-  }
-};
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
+    <>
+      {/* OVERLAY */}
+      <div 
+        style={{ ...styles.overlay, opacity: isOpen ? 1 : 0, pointerEvents: isOpen ? "auto" : "none" }} 
+        onClick={onClose} 
+      />
 
+      {/* DRAWER */}
+      <div style={{ ...styles.drawer, transform: isOpen ? "translateX(0)" : "translateX(100%)" }}>
+        
         {/* HEADER */}
         <div style={styles.header}>
-          <FaPlus />
-          <h2 style={styles.title}>Add New Product</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={styles.iconBox}><FaPlus size={14}/></div>
+            <div>
+              <h2 style={styles.title}>Add New Product</h2>
+              <p style={styles.subtitle}>Fill in the details below to create a new item.</p>
+            </div>
+          </div>
+          <button onClick={onClose} style={styles.closeBtn}><FaTimes /></button>
         </div>
 
-        {/* NAME + BRAND */}
-        <div style={styles.grid}>
+        {/* CONTENT (Scrollable) */}
+        <div style={styles.content}>
+          
           <div style={styles.formGroup}>
             <label style={styles.label}>Product Name</label>
             <input
@@ -129,7 +121,7 @@ const handleSubmit = async () => {
               value={form.product_name}
               onChange={handleChange}
               style={styles.input}
-              placeholder="Enter product name"
+              placeholder="e.g. Premium Wireless Headphones"
             />
           </div>
 
@@ -140,80 +132,67 @@ const handleSubmit = async () => {
               value={form.brand}
               onChange={handleChange}
               style={styles.input}
-              placeholder="Enter brand"
-            />
-          </div>
-        </div>
-
-        {/* DESCRIPTION */}
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Description</label>
-          <textarea
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            style={styles.textarea}
-            placeholder="Product description"
-          />
-        </div>
-
-        {/* PRICE + STATUS */}
-        <div style={styles.grid}>
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Price</label>
-            <input
-              type="number"
-              name="price"
-              value={form.price || ""}
-              onChange={handleChange}
-              style={styles.input}
+              placeholder="e.g. Sony"
             />
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label}>Status</label>
-            <select
-              name="status"
-              value={form.status}
+            <label style={styles.label}>Description</label>
+            <textarea
+              name="description"
+              value={form.description}
               onChange={handleChange}
-              style={styles.input}
-            >
-              <option value="Available">Available</option>
-              <option value="Out of Stock">Out of Stock</option>
-              <option value="Discontinued">Discontinued</option>
-            </select>
+              style={styles.textarea}
+              placeholder="Provide a brief summary of the product features..."
+            />
+          </div>
+
+          <div style={styles.grid}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Price (PHP)</label>
+              <input
+                type="number"
+                name="price"
+                value={form.price || ""}
+                onChange={handleChange}
+                style={styles.input}
+              />
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Status</label>
+              <select name="status" value={form.status} onChange={handleChange} style={styles.select}>
+                <option value="Available">Available</option>
+                <option value="Out of Stock">Out of Stock</option>
+                <option value="Discontinued">Discontinued</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Product Image</label>
+            <div style={styles.uploadArea}>
+              <input type="file" accept="image/*" onChange={handleImageChange} style={styles.fileInput} id="file-upload" />
+              <label htmlFor="file-upload" style={styles.uploadLabel}>
+                {preview ? "Change Image" : "Choose Image File"}
+              </label>
+            </div>
+            {preview && (
+              <div style={styles.previewContainer}>
+                <img src={preview} alt="Preview" style={styles.preview} />
+              </div>
+            )}
           </div>
         </div>
 
-        {/* IMAGE */}
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Product Image</label>
-
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            style={styles.fileInput}
-          />
-
-          {preview && (
-            <img src={preview} alt="Preview" style={styles.preview} />
-          )}
-        </div>
-
-        {/* BUTTONS */}
-        <div style={styles.buttons}>
-          <button style={styles.cancelBtn} onClick={onClose}>
-            Cancel
-          </button>
-
-          <button style={styles.saveBtn} onClick={handleSubmit}>
-            Save Product
-          </button>
+        {/* FOOTER (Sticky) */}
+        <div style={styles.footer}>
+          <button style={styles.cancelBtn} onClick={onClose}>Cancel</button>
+          <button style={styles.saveBtn} onClick={handleSubmit}>Create Product</button>
         </div>
 
       </div>
-    </div>
+    </>
   );
 }
 
@@ -221,102 +200,108 @@ const styles: { [key: string]: CSSProperties } = {
   overlay: {
     position: "fixed",
     inset: 0,
-    background: "rgba(0,0,0,0.45)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
+    background: "rgba(15, 23, 42, 0.3)",
     backdropFilter: "blur(4px)",
     zIndex: 1000,
+    transition: "opacity 0.3s ease",
   },
-
-  modal: {
-    width: 480,
+  drawer: {
+    position: "fixed",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: "450px",
+    maxWidth: "100%",
     background: "#ffffff",
-    padding: 28,
-    borderRadius: 14,
-    boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
+    boxShadow: "-10px 0 50px rgba(0,0,0,0.1)",
+    zIndex: 1001,
     display: "flex",
     flexDirection: "column",
-    gap: 16,
+    transition: "transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
   },
-
   header: {
+    padding: "24px",
+    borderBottom: "1px solid #f1f5f9",
     display: "flex",
-    alignItems: "center",
-    gap: 8,
+    justifyContent: "space-between",
+    alignItems: "flex-start",
   },
-
-  title: {
-    margin: 0,
-    fontSize: 20,
-    fontWeight: 600,
+  iconBox: {
+    padding: "10px",
+    background: "#f8fafc",
+    borderRadius: "10px",
+    color: "#0f172a",
+    border: "1px solid #e2e8f0"
   },
-
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: 12,
-  },
-
-  formGroup: {
+  title: { margin: 0, fontSize: "18px", fontWeight: 700, color: "#0f172a" },
+  subtitle: { margin: "4px 0 0 0", fontSize: "13px", color: "#64748b" },
+  closeBtn: { background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "18px" },
+  content: {
+    flex: 1,
+    overflowY: "auto",
+    padding: "24px",
     display: "flex",
     flexDirection: "column",
-    gap: 6,
+    gap: "20px",
   },
-
-  label: {
-    fontSize: 13,
-    fontWeight: 500,
-  },
-
+  formGroup: { display: "flex", flexDirection: "column", gap: "8px" },
+  label: { fontSize: "13px", fontWeight: 600, color: "#475569" },
   input: {
-    padding: "10px 12px",
-    borderRadius: 8,
-    border: "1px solid #e5e7eb",
+    padding: "12px",
+    borderRadius: "10px",
+    border: "1px solid #e2e8f0",
+    fontSize: "14px",
+    outline: "none",
+    transition: "border-color 0.2s",
   },
-
+  select: {
+    padding: "12px",
+    borderRadius: "10px",
+    border: "1px solid #e2e8f0",
+    fontSize: "14px",
+    background: "#fff"
+  },
   textarea: {
-    padding: "10px 12px",
-    borderRadius: 8,
-    border: "1px solid #e5e7eb",
-    minHeight: 80,
+    padding: "12px",
+    borderRadius: "10px",
+    border: "1px solid #e2e8f0",
+    minHeight: "100px",
+    fontSize: "14px",
+    resize: "vertical",
+    outline: "none",
   },
-
-  fileInput: {
-    padding: 8,
-    borderRadius: 8,
-    border: "1px solid #e5e7eb",
-  },
-
-  preview: {
-    width: "100%",
-    height: 140,
-    objectFit: "cover",
-    borderRadius: 8,
-    marginTop: 8,
-  },
-
-  buttons: {
+  grid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" },
+  uploadArea: { border: "2px dashed #e2e8f0", borderRadius: "12px", padding: "20px", textAlign: "center" },
+  fileInput: { display: "none" },
+  uploadLabel: { fontSize: "14px", fontWeight: 600, color: "#6366f1", cursor: "pointer" },
+  previewContainer: { marginTop: "12px", borderRadius: "12px", overflow: "hidden", border: "1px solid #f1f5f9" },
+  preview: { width: "100%", height: "180px", objectFit: "cover" },
+  footer: {
+    padding: "20px 24px",
+    borderTop: "1px solid #f1f5f9",
     display: "flex",
     justifyContent: "flex-end",
-    gap: 10,
-    marginTop: 10,
+    gap: "12px",
+    background: "#fff",
   },
-
   saveBtn: {
-    background: "#000",
+    background: "#0f172a",
     color: "#fff",
     border: "none",
-    padding: "10px 16px",
-    borderRadius: 8,
+    padding: "12px 24px",
+    borderRadius: "10px",
+    fontSize: "14px",
+    fontWeight: 600,
     cursor: "pointer",
   },
-
   cancelBtn: {
-    background: "#f3f4f6",
-    border: "none",
-    padding: "10px 16px",
-    borderRadius: 8,
+    background: "#fff",
+    border: "1px solid #e2e8f0",
+    padding: "12px 24px",
+    borderRadius: "10px",
+    fontSize: "14px",
+    fontWeight: 600,
+    color: "#475569",
     cursor: "pointer",
   },
 };

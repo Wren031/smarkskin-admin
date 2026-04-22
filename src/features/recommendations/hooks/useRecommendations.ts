@@ -46,9 +46,6 @@ export default function useRecommendations() {
     }
   };
 
-  // =========================
-  // 🔄 UPDATE
-  // =========================
   const handleUpdate = async (updatedRec: Recommendation) => {
     try {
       await recommendationService.update(updatedRec);

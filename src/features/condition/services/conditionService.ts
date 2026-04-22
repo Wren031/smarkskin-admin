@@ -44,7 +44,7 @@ export const conditionService = {
 
   async remove(id: number): Promise<void> {
     const { error } = await supabase
-      .from("tbl_condition") // 👈 CHANGE HERE
+      .from("tbl_condition")
       .delete()
       .eq("id", id);
 

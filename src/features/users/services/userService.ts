@@ -1,5 +1,5 @@
 import { supabase } from "../../../lib/supabase";
-import type { User } from "../typs/User";
+import type { User } from "../types/User";
 
 export const adminService = {
 
@@ -15,6 +15,25 @@ export const adminService = {
     }
 
     return data ?? [];
+  },
+
+  async signIn(email: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+
+    return data;
+  },
+
+  async getCurrentUser() {
+    const { data, error } = await supabase.auth.getUser();
+
+    if (error) throw error;
+
+    return data.user;
   },
 
   async getUserById(id: number): Promise<User | null> {

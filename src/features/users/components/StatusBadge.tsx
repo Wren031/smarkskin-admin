@@ -1,49 +1,76 @@
-import type { UserStatus } from "../typs/UserStatus";
+import type { CSSProperties } from "react";
+import type { UserStatus } from "../types/UserStatus";
 
-const STATUS_STYLES: Record<
+const STATUS_CONFIG: Record<
   string,
-  { bg: string; color: string; label: string }
+  { bg: string; color: string; border: string; label: string }
 > = {
-  Active: {
-    bg: "#dcfce7",
-    color: "#16a34a",
+  active: {
+    bg: "#ecfdf5",    // Light Emerald
+    color: "#10b981",  // Vibrant Green
+    border: "#d1fae5",
     label: "Active",
   },
-  Inactive: {
-    bg: "#fee2e2",
-    color: "#dc2626",
+  inactive: {
+    bg: "#fef2f2",    // Light Red
+    color: "#ef4444",  // Vibrant Red
+    border: "#fee2e2",
     label: "Inactive",
   },
-  Pending: {
-    bg: "#fef9c3",
-    color: "#ca8a04",
+  pending: {
+    bg: "#fffbeb",
+    color: "#f59e0b",
+    border: "#fef3c7",
     label: "Pending",
   },
 };
 
-export default function StatusBadge({ status }: { status: UserStatus }) {
-  const style = STATUS_STYLES[status] || {
-    bg: "#e2e8f0",
-    color: "#475569",
+export default function StatusBadge({ status }: { status: string | UserStatus }) {
+  // Normalize status to lowercase to match config keys safely
+  const normalizedStatus = status?.toLowerCase() || "unknown";
+  
+  const config = STATUS_CONFIG[normalizedStatus] || {
+    bg: "#f8fafc",
+    color: "#64748b",
+    border: "#e2e8f0",
     label: status,
   };
 
   return (
     <span
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "4px 10px",
-        borderRadius: 999,
-        fontSize: 12,
-        fontWeight: 600,
-        backgroundColor: style.bg,
-        color: style.color,
-        minWidth: 70,
+        ...styles.badge,
+        backgroundColor: config.bg,
+        color: config.color,
+        border: `1px solid ${config.border}`,
       }}
     >
-      {style.label}
+      {/* Status Dot */}
+      <span style={{ ...styles.dot, backgroundColor: config.color }} />
+      {config.label}
     </span>
   );
 }
+
+const styles: Record<string, CSSProperties> = {
+  badge: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "8px",
+    padding: "5px 12px",
+    borderRadius: "20px", // More rounded "pill" look for status
+    fontSize: "11px",
+    fontWeight: 800,
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+    minWidth: "90px",
+    justifyContent: "center",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.02)", // Subtle depth
+  },
+  dot: {
+    width: "6px",
+    height: "6px",
+    borderRadius: "50%",
+    display: "inline-block",
+  },
+};

@@ -1,171 +1,263 @@
-import { useNavigate } from "react-router-dom"; // 1. Import useNavigate
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { CSSProperties } from "react";
+import { Lock, Mail, ArrowRight, ShieldCheck, ChevronRight } from "lucide-react";
+import { FcGoogle } from "react-icons/fc";
 
 export default function LoginPage() {
-  const navigate = useNavigate(); // 2. Initialize the hook
+  const navigate = useNavigate();
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // In a real app, you'd check credentials here.
-    // For now, we go straight to the dashboard:
-    navigate("/app"); 
+    navigate("/admin/dashboard");
   };
 
   return (
     <div style={styles.container}>
-      <style>
-        {`
-          .glass-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-          }
-          .input-field:focus {
-            background: rgba(255, 255, 255, 0.25) !important;
-            outline: 2px solid rgba(255, 255, 255, 0.5);
-          }
-          .login-btn:hover {
-            background: #f8fafc !important;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-          }
-          .login-btn:active {
-            transform: translateY(0);
-          }
-        `}
-      </style>
-
-      <div className="glass-card" style={styles.card}>
-        <div style={styles.header}>
-          <h1 style={styles.title}>Welcome Back</h1>
-          <p style={styles.subtitle}>Please enter your details</p>
-        </div>
-
-        {/* 3. Attach handleLogin to onSubmit */}
-        <form style={styles.form} onSubmit={handleLogin}>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Email Address</label>
-            <input 
-              required
-              type="email" 
-              placeholder="name@company.com" 
-              className="input-field"
-              style={styles.input} 
-            />
-          </div>
-
-          <div style={styles.inputGroup}>
-            <div style={styles.labelRow}>
-              <label style={styles.label}>Password</label>
-              <a href="#" style={styles.link}>Forgot?</a>
+      {/* LEFT SIDE: Brand/Visual Section */}
+      <section style={styles.visualSide}>
+        <div style={styles.imageOverlay}>
+          <div style={styles.brandContent}>
+            <div style={styles.miniLogo}>
+              <ShieldCheck size={28} color="#fff" />
             </div>
-            <input 
-              required
-              type="password" 
-              placeholder="••••••••" 
-              className="input-field"
-              style={styles.input} 
-            />
+            <h2 style={styles.visualTitle}>Enterprise Guard</h2>
+            <p style={styles.visualText}>
+              The centralized administrative backbone for your organization's infrastructure.
+            </p>
+            
+            <div style={styles.testimonialCard}>
+              <p style={styles.quote}>
+                "The most robust security protocol we've implemented this year."
+              </p>
+              <span style={styles.author}>— CTO, Nexus Systems</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* RIGHT SIDE: Auth Section */}
+      <section style={styles.authSide}>
+        <div style={styles.loginWrapper}>
+          <div style={styles.header}>
+            <div style={styles.badge}>
+              <span style={styles.badgeDot}></span>
+              SECURE ACCESS
+            </div>
+            <h1 style={styles.title}>Welcome Back</h1>
+            <p style={styles.subtitle}>Please enter your administrative credentials.</p>
           </div>
 
-          <button type="submit" className="login-btn" style={styles.button}>
-            Sign In
-          </button>
-        </form>
+          <form onSubmit={handleLogin} style={styles.form}>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Corporate Email</label>
+              <div style={styles.inputWrapper}>
+                <Mail size={18} style={styles.icon} />
+                <input 
+                  type="email" 
+                  placeholder="name@company.com" 
+                  style={styles.input}
+                  required 
+                />
+              </div>
+            </div>
 
-        <p style={styles.footerText}>
-          Don't have an account? <a href="#" style={{...styles.link, fontWeight: 'bold'}}>Sign up</a>
-        </p>
-      </div>
+            <div style={styles.inputGroup}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={styles.label}>Password</label>
+                <a href="#" style={styles.forgotPass}>Forgot password?</a>
+              </div>
+              <div style={styles.inputWrapper}>
+                <Lock size={18} style={styles.icon} />
+                <input 
+                  type="password" 
+                  placeholder="••••••••" 
+                  style={styles.input}
+                  required 
+                />
+              </div>
+            </div>
+
+            <div style={styles.optionsRow}>
+              <label style={styles.checkboxLabel}>
+                <input 
+                  type="checkbox" 
+                  checked={rememberMe} 
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  style={styles.checkbox}
+                />
+                Remember this session
+              </label>
+            </div>
+
+            <button type="submit" style={styles.loginButton}>
+              Sign In <ChevronRight size={18} />
+            </button>
+          </form>
+
+          <div style={styles.divider}>
+            <div style={styles.line}></div>
+            <span style={styles.dividerText}>or continue with</span>
+            <div style={styles.line}></div>
+          </div>
+
+          <button style={styles.googleButton}>
+            <FcGoogle size={20} />
+            Single Sign-On (SSO)
+          </button>
+
+          <footer style={styles.footer}>
+            <p style={styles.footerText}>
+              Protected by hardware-level encryption. <br />
+              <a href="#" style={styles.link}>Security Policy</a>
+            </p>
+          </footer>
+        </div>
+      </section>
     </div>
   );
 }
 
-// ... styles remain exactly the same as your provided code ...
 const styles: Record<string, CSSProperties> = {
   container: {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-    fontFamily: 'system-ui, -apple-system, sans-serif',
-    padding: '20px',
+    display: "flex",
+    minHeight: "100vh",
+    backgroundColor: "#ffffff",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
   },
-  card: {
-    width: '100%',
-    maxWidth: '400px',
-    borderRadius: '24px',
-    padding: '40px',
-    textAlign: 'center',
+  // Visual Side
+  visualSide: {
+    flex: 1.2,
+    backgroundImage: "url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    position: "relative",
+    display: "flex",
+    flexDirection: "column",
   },
-  header: {
-    marginBottom: '32px',
+  imageOverlay: {
+    flex: 1,
+    background: "linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.4) 100%)",
+    padding: "80px",
+    display: "flex",
+    alignItems: "center",
   },
-  title: {
-    color: '#ffffff',
-    fontSize: '28px',
-    fontWeight: '700',
-    marginBottom: '8px',
+  brandContent: {
+    maxWidth: "480px",
+    color: "white",
   },
-  subtitle: {
-    color: '#94a3b8',
-    fontSize: '14px',
+  miniLogo: {
+    width: "56px",
+    height: "56px",
+    borderRadius: "14px",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: "32px",
+    backdropFilter: "blur(10px)",
+    border: "1px solid rgba(255, 255, 255, 0.2)",
   },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px',
+  visualTitle: { fontSize: "42px", fontWeight: 800, marginBottom: "20px", letterSpacing: "-0.02em" },
+  visualText: { fontSize: "18px", lineHeight: "1.6", color: "#cbd5e1", marginBottom: "48px" },
+  testimonialCard: {
+    padding: "24px",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderRadius: "16px",
+    backdropFilter: "blur(8px)",
+    border: "1px solid rgba(255, 255, 255, 0.1)",
   },
-  inputGroup: {
-    textAlign: 'left',
+  quote: { fontStyle: "italic", fontSize: "16px", color: "#f8fafc", marginBottom: "12px" },
+  author: { fontSize: "13px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase" },
+
+  // Auth Side
+  authSide: {
+    flex: 1,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: "40px",
   },
-  labelRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '8px',
+  loginWrapper: {
+    width: "100%",
+    maxWidth: "420px",
   },
-  label: {
-    color: '#e2e8f0',
-    fontSize: '14px',
-    fontWeight: '500',
-    display: 'block',
-    marginBottom: '8px',
+  header: { marginBottom: "40px" },
+  badge: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "8px",
+    backgroundColor: "#f1f5f9",
+    color: "#475569",
+    padding: "6px 12px",
+    borderRadius: "100px",
+    fontSize: "11px",
+    fontWeight: 700,
+    letterSpacing: "0.05em",
+    marginBottom: "20px",
   },
+  badgeDot: { width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#10b981" },
+  title: { fontSize: "32px", fontWeight: 800, color: "#0f172a", marginBottom: "12px", letterSpacing: "-0.02em" },
+  subtitle: { fontSize: "16px", color: "#64748b", fontWeight: 400 },
+
+  form: { display: "flex", flexDirection: "column", gap: "24px" },
+  inputGroup: { display: "flex", flexDirection: "column", gap: "8px" },
+  label: { fontSize: "14px", fontWeight: 600, color: "#334155" },
+  inputWrapper: { position: "relative", display: "flex", alignItems: "center" },
+  icon: { position: "absolute", left: "14px", color: "#94a3b8" },
   input: {
-    width: '100%',
-    padding: '12px 16px',
-    borderRadius: '12px',
-    border: 'none',
-    background: 'rgba(255, 255, 255, 0.15)',
-    color: '#ffffff',
-    fontSize: '16px',
-    transition: 'all 0.2s ease',
+    width: "100%",
+    padding: "12px 14px 12px 44px",
+    borderRadius: "10px",
+    border: "1px solid #e2e8f0",
+    fontSize: "15px",
+    transition: "all 0.2s",
+    outline: "none",
+    backgroundColor: "#f8fafc",
   },
-  button: {
-    marginTop: '10px',
-    padding: '14px',
-    borderRadius: '12px',
-    border: 'none',
-    background: '#ffffff',
-    color: '#0f172a',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
+  forgotPass: { fontSize: "13px", color: "#2563eb", textDecoration: "none", fontWeight: 600 },
+  optionsRow: { display: "flex", alignItems: "center" },
+  checkboxLabel: { display: "flex", alignItems: "center", gap: "10px", fontSize: "14px", color: "#475569", cursor: "pointer" },
+  checkbox: { width: "18px", height: "18px", cursor: "pointer", accentColor: "#0f172a" },
+  
+  loginButton: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+    padding: "14px",
+    backgroundColor: "#0f172a",
+    color: "white",
+    border: "none",
+    borderRadius: "10px",
+    fontSize: "16px",
+    fontWeight: 600,
+    cursor: "pointer",
+    transition: "background 0.2s",
   },
-  link: {
-    color: '#60a5fa',
-    textDecoration: 'none',
-    fontSize: '13px',
+  divider: { display: "flex", alignItems: "center", margin: "32px 0", gap: "16px" },
+  line: { flex: 1, height: "1px", backgroundColor: "#f1f5f9" },
+  dividerText: { fontSize: "12px", color: "#94a3b8", fontWeight: 500 },
+  
+  googleButton: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "12px",
+    width: "100%",
+    padding: "12px",
+    backgroundColor: "white",
+    border: "1px solid #e2e8f0",
+    borderRadius: "10px",
+    fontSize: "15px",
+    fontWeight: 600,
+    color: "#334155",
+    cursor: "pointer",
+    transition: "background 0.2s",
   },
-  footerText: {
-    marginTop: '24px',
-    color: '#94a3b8',
-    fontSize: '14px',
-  }
+  footer: { marginTop: "48px", textAlign: "center" },
+  footerText: { fontSize: "13px", color: "#94a3b8", lineHeight: "1.6" },
+  link: { color: "#475569", fontWeight: 600, textDecoration: "none" },
 };

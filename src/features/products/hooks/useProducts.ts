@@ -9,6 +9,7 @@ export default function useProducts() {
   const fetchProducts = async () => {
     setLoading(true);
     const data = await productServices.getAll();
+    
     setProducts(data);
     
     setLoading(false);

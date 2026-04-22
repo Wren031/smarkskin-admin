@@ -1,5 +1,5 @@
-import { FaTrash } from "react-icons/fa";
-import type { ReactNode } from "react";
+import { AlertCircle, Trash2, X } from "lucide-react";
+import type { ReactNode, CSSProperties } from "react";
 
 interface Props {
   isOpen: boolean;
@@ -8,6 +8,7 @@ interface Props {
   icon?: ReactNode;
   confirmText?: string;
   cancelText?: string;
+  variant?: "danger" | "primary";
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -19,28 +20,62 @@ export default function ConfirmModal({
   icon,
   confirmText = "Confirm",
   cancelText = "Cancel",
+  variant = "danger",
   onConfirm,
   onCancel,
 }: Props) {
   if (!isOpen) return null;
 
+  const isDanger = variant === "danger";
+
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
-        <div style={styles.iconWrapper}>
-          {icon || <FaTrash size={22} color="#dc2626" />}
+    <div style={styles.overlay} onClick={onCancel}>
+      <style>{`
+        @keyframes modalScale {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .modal-body { animation: modalScale 0.2s ease-out; }
+        .btn-hover:hover { opacity: 0.9; transform: translateY(-1px); }
+      `}</style>
+
+      <div 
+        className="modal-body" 
+        style={styles.modal} 
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close Button */}
+        <button onClick={onCancel} style={styles.closeIcon}>
+          <X size={18} />
+        </button>
+
+        {/* Icon Header */}
+        <div style={{
+          ...styles.iconWrapper,
+          backgroundColor: isDanger ? "#fff1f2" : "#eff6ff",
+          color: isDanger ? "#e11d48" : "#2563eb"
+        }}>
+          {icon || (isDanger ? <Trash2 size={24} /> : <AlertCircle size={24} />)}
         </div>
 
+        {/* Text Content */}
         <h3 style={styles.title}>{title}</h3>
-
         <p style={styles.message}>{message}</p>
 
+        {/* Action Buttons */}
         <div style={styles.buttons}>
           <button style={styles.cancelBtn} onClick={onCancel}>
             {cancelText}
           </button>
 
-          <button style={styles.deleteBtn} onClick={onConfirm}>
+          <button 
+            className="btn-hover"
+            style={{
+              ...styles.confirmBtn,
+              backgroundColor: isDanger ? "#0f172a" : "#2563eb", // Using dark slate for professional danger
+            }} 
+            onClick={onConfirm}
+          >
             {confirmText}
           </button>
         </div>
@@ -48,76 +83,95 @@ export default function ConfirmModal({
     </div>
   );
 }
-const styles: { [key: string]: React.CSSProperties } = {
+
+const styles: Record<string, CSSProperties> = {
   overlay: {
     position: "fixed",
     inset: 0,
-    backgroundColor: "rgba(0,0,0,0.45)",
+    backgroundColor: "rgba(15, 23, 42, 0.4)", // Slate-900 with alpha
+    backdropFilter: "blur(6px)",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    backdropFilter: "blur(3px)",
-    zIndex: 1000,
+    zIndex: 2000, // Higher than drawers
   },
 
   modal: {
+    position: "relative",
     background: "#ffffff",
-    padding: "28px 30px",
-    borderRadius: 14,
-    width: 360,
+    padding: "40px 32px 32px",
+    borderRadius: "20px",
+    width: "100%",
+    maxWidth: "400px",
     textAlign: "center",
-    boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
+    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+    border: "1px solid #f1f5f9",
+  },
+
+  closeIcon: {
+    position: "absolute",
+    top: "16px",
+    right: "16px",
+    background: "transparent",
+    border: "none",
+    color: "#94a3b8",
+    cursor: "pointer",
+    padding: "4px",
   },
 
   iconWrapper: {
-    width: 50,
-    height: 50,
-    margin: "0 auto 12px",
-    background: "#fee2e2",
-    borderRadius: "50%",
+    width: "60px",
+    height: "60px",
+    margin: "0 auto 20px",
+    borderRadius: "16px",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
   },
 
   title: {
-    margin: "8px 0",
-    fontSize: 20,
-    fontWeight: 600,
-    color: "#111827",
+    margin: "0 0 12px 0",
+    fontSize: "20px",
+    fontWeight: 700,
+    color: "#0f172a",
+    letterSpacing: "-0.02em",
   },
 
   message: {
-    fontSize: 14,
-    color: "#6b7280",
-    marginBottom: 20,
-    lineHeight: 1.5,
+    fontSize: "14px",
+    color: "#64748b",
+    marginBottom: "32px",
+    lineHeight: "1.6",
+    padding: "0 10px",
   },
 
   buttons: {
     display: "flex",
-    justifyContent: "center",
-    gap: 12,
+    gap: "12px",
   },
 
   cancelBtn: {
-    background: "#f3f4f6",
-    border: "none",
-    padding: "10px 16px",
-    borderRadius: 8,
-    fontSize: 14,
+    flex: 1,
+    background: "#fff",
+    border: "1px solid #e2e8f0",
+    padding: "12px",
+    borderRadius: "12px",
+    fontSize: "14px",
     cursor: "pointer",
-    fontWeight: 500,
+    fontWeight: 600,
+    color: "#64748b",
+    transition: "all 0.2s",
   },
 
-  deleteBtn: {
-    background: "#dc2626",
+  confirmBtn: {
+    flex: 2,
     color: "#fff",
     border: "none",
-    padding: "10px 16px",
-    borderRadius: 8,
-    fontSize: 14,
+    padding: "12px",
+    borderRadius: "12px",
+    fontSize: "14px",
     cursor: "pointer",
-    fontWeight: 500,
+    fontWeight: 700,
+    transition: "all 0.2s",
   },
 };
