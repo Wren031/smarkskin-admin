@@ -1,7 +1,10 @@
-import { useState, useEffect, type CSSProperties } from "react";
-import { X, Edit3, Save, Package, ChevronDown, Plus } from "lucide-react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { X, Edit3, Save, Package, ChevronDown, Loader2, Lightbulb } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
+
+// Types
 import type { Products } from "../../products/types/Products";
+import type { LifestyleTip } from "../../lifestyle/types/Lifestyle";
 
 type Props = {
   selected: any;
@@ -9,29 +12,45 @@ type Props = {
   onUpdate: (updated: any) => void;
 };
 
-export default function UpdateRecommendation({
-  selected,
-  onClose,
-  onUpdate,
-}: Props) {
+export default function UpdateRecommendation({ selected, onClose, onUpdate }: Props) {
+  // --- Data States ---
   const [allProducts, setAllProducts] = useState<Products[]>([]);
+  const [allLifestyleTips, setAllLifestyleTips] = useState<LifestyleTip[]>([]);
+  
+  // --- UI States ---
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // --- Form State ---
   const [form, setForm] = useState({
     condition: "",
     severity: "",
     treatment: "",
     precautions: "",
     products: [] as Products[],
+    lifestyleTips: [] as LifestyleTip[],
   });
 
-  // Fetch all available products for the dropdown
+  // Entry Animation
   useEffect(() => {
-    const fetchProducts = async () => {
-      const { data } = await supabase.from("tbl_products").select("*");
-      if (data) setAllProducts(data);
-    };
-    fetchProducts();
+    const frame = requestAnimationFrame(() => setIsAnimating(true));
+    return () => cancelAnimationFrame(frame);
   }, []);
 
+  // Fetch Metadata
+  useEffect(() => {
+    const fetchData = async () => {
+      const [prodRes, tipsRes] = await Promise.all([
+        supabase.from("tbl_products").select("*").order('product_name'),
+        supabase.from("tbl_lifestyle_tips").select("*").order('title'),
+      ]);
+      if (prodRes.data) setAllProducts(prodRes.data);
+      if (tipsRes.data) setAllLifestyleTips(tipsRes.data);
+    };
+    fetchData();
+  }, []);
+
+  // Sync Form with Selected Record
   useEffect(() => {
     if (selected) {
       setForm({
@@ -40,158 +59,262 @@ export default function UpdateRecommendation({
         treatment: selected.treatment || "",
         precautions: selected.precautions || "",
         products: selected.products || [],
+        lifestyleTips: selected.lifestyleTips || [],
       });
     }
   }, [selected]);
 
-  const isValid =
-    form.condition.trim() !== "" &&
-    form.severity.trim() !== "" &&
-    form.treatment.trim() !== "" &&
-    form.products.length > 0;
+  // --- Handlers ---
+  const handleClose = useCallback(() => {
+    setIsAnimating(false);
+    setTimeout(onClose, 300);
+  }, [onClose]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isValid) return;
-    onUpdate({ ...selected, ...form });
-    onClose();
+  const updateField = (field: keyof typeof form, value: any) => {
+    setForm(prev => ({ ...prev, [field]: value }));
   };
 
-  const addProduct = (productId: string) => {
-    const product = allProducts.find((p) => p.id === Number(productId));
-    if (product && !form.products.find((p) => p.id === product.id)) {
-      setForm({ ...form, products: [...form.products, product] });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isFormValid || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      // Simulate/Handle update logic
+      await onUpdate({ ...selected, ...form });
+      handleClose();
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const removeProduct = (id: number) => {
-    setForm({ ...form, products: form.products.filter((p) => p.id !== id) });
-  };
+  // --- Validation ---
+  const isFormValid = useMemo(() => (
+    form.condition.trim() !== "" &&
+    form.treatment.trim() !== "" &&
+    (form.products.length > 0 || form.lifestyleTips.length > 0)
+  ), [form]);
 
   return (
-    <div style={styles.overlay} onClick={onClose}>
-      <style>{`
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-        .drawer-content { animation: slideIn 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
-        .product-item:hover { border-color: #e11d48 !important; }
-      `}</style>
-
-      <div className="drawer-content" style={styles.drawer} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div style={styles.header}>
-          <div style={styles.headerTitle}>
-            <div style={styles.iconBox}><Edit3 size={20} /></div>
+    <div 
+      style={{ ...styles.overlay, opacity: isAnimating ? 1 : 0 }} 
+      onClick={handleClose}
+    >
+      <div 
+        style={{ 
+          ...styles.drawer, 
+          transform: isAnimating ? "translateX(0)" : "translateX(100%)" 
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* HEADER */}
+        <header style={styles.header}>
+          <div style={styles.headerLeft}>
+            <div style={styles.badge}>
+              <Edit3 size={18} color="#0f172a" />
+            </div>
             <div>
               <h2 style={styles.title}>Update Protocol</h2>
-              <p style={styles.subtitle}>MODIFY RECORD ID: {selected?.id}</p>
+              <p style={styles.subtitle}>ID: {selected?.id} • {form.condition.toUpperCase()}</p>
             </div>
           </div>
-          <button onClick={onClose} style={styles.closeBtn}><X size={20} /></button>
-        </div>
+          <button onClick={handleClose} style={styles.closeBtn} aria-label="Close">
+            <X size={14} />
+          </button>
+        </header>
 
-        {/* Scrollable Form */}
-        <form onSubmit={handleSubmit} style={styles.scrollArea}>
+        {/* BODY */}
+        <form id="update-form" onSubmit={handleSubmit} style={styles.body}>
           
-          <div style={styles.section}>
-            <label style={styles.label}>TREATMENT PLAN</label>
-            <textarea
-              style={styles.textarea}
-              value={form.treatment}
-              onChange={(e) => setForm({ ...form, treatment: e.target.value })}
-            />
-          </div>
+          {/* Section: Treatment */}
+          <section style={styles.section}>
+            <div style={styles.secHead}>
+              <span style={styles.secLabel}>Clinical Strategy</span>
+              <div style={styles.secLine} />
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label}>Instructions</label>
+              <textarea
+                style={{ ...styles.input, ...styles.textarea }}
+                value={form.treatment}
+                onChange={(e) => updateField("treatment", e.target.value)}
+                placeholder="Describe treatment steps..."
+              />
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label}>Safety & Precautions</label>
+              <textarea
+                style={{ ...styles.input, ...styles.textarea, borderLeft: "4px solid #fca5a5" }}
+                value={form.precautions}
+                onChange={(e) => updateField("precautions", e.target.value)}
+                placeholder="Warnings or side effects..."
+              />
+            </div>
+          </section>
 
-          <div style={styles.section}>
-            <label style={styles.label}>PRESCRIBED FORMULATIONS</label>
-            
-            {/* Product Selector */}
-            <div style={{ position: 'relative', marginBottom: '16px' }}>
-              <select
-                style={styles.select}
-                value=""
-                onChange={(e) => addProduct(e.target.value)}
-              >
-                <option value="" disabled>Add pharmaceutical to protocol...</option>
-                {allProducts.map((p) => (
-                  <option key={p.id} value={p.id}>{p.product_name}</option>
-                ))}
-              </select>
-              <ChevronDown size={14} style={styles.selectArrow} />
+          {/* Section: Adjuncts */}
+          <section style={styles.section}>
+            <div style={styles.secHead}>
+              <span style={styles.secLabel}>Adjuncts & Prescriptions</span>
+              <div style={styles.secLine} />
             </div>
 
-            {/* Selected Products Grid */}
-            <div style={styles.productGrid}>
-              {form.products.map((product) => (
-                <div key={product.id} className="product-item" style={styles.productCard}>
-                  <img src={product.image_url} alt="" style={styles.productImage} />
-                  <div style={{ flex: 1 }}>
-                    <div style={styles.pName}>{product.product_name}</div>
-                    <div style={styles.pBrand}>{product.brand}</div>
+            {/* Product Management */}
+            <div style={styles.field}>
+              <label style={styles.label}>Formulations</label>
+              <div style={{ position: 'relative' }}>
+                <select
+                  style={{ ...styles.input, ...styles.select }}
+                  value=""
+                  onChange={(e) => {
+                    const found = allProducts.find(p => String(p.id) === e.target.value);
+                    if (found && !form.products.some(p => p.id === found.id)) {
+                      updateField("products", [...form.products, found]);
+                    }
+                  }}
+                >
+                  <option value="">Add pharmaceutical...</option>
+                  {allProducts.map(p => <option key={p.id} value={p.id}>{p.product_name}</option>)}
+                </select>
+                <ChevronDown size={14} style={styles.selectArrow} />
+              </div>
+
+              <div style={styles.productGrid}>
+                {form.products.map((p) => (
+                  <div key={p.id} style={styles.productCard}>
+                    <img 
+                      src={p.image_url} 
+                      alt="" 
+                      style={styles.productThumb} 
+                      onError={(e) => (e.currentTarget.style.display = "none")}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={styles.productName}>{p.product_name}</p>
+                      <p style={styles.productType}>{p.type || 'Prescription'}</p>
+                    </div>
+                    <button 
+                      type="button" 
+                      style={styles.removeCircle} 
+                      onClick={() => updateField("products", form.products.filter(x => x.id !== p.id))}
+                    >
+                      <X size={10} />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    style={styles.removeBtn}
-                    onClick={() => removeProduct(product.id)}
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div style={styles.section}>
-            <label style={styles.label}>SAFETY WARNINGS</label>
-            <textarea
-              style={{ ...styles.textarea, height: "100px", borderLeft: "4px solid #fca5a5" }}
-              value={form.precautions}
-              onChange={(e) => setForm({ ...form, precautions: e.target.value })}
-            />
-          </div>
+            {/* Lifestyle Management */}
+            <div style={styles.field}>
+              <label style={styles.label}>Lifestyle Tips</label>
+              <select
+                style={{ ...styles.input, ...styles.select }}
+                value=""
+                onChange={(e) => {
+                  const found = allLifestyleTips.find(t => String(t.id) === e.target.value);
+                  if (found && !form.lifestyleTips.some(t => t.id === found.id)) {
+                    updateField("lifestyleTips", [...form.lifestyleTips, found]);
+                  }
+                }}
+              >
+                <option value="">Add lifestyle tip...</option>
+                {allLifestyleTips.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+              </select>
+
+              <div style={styles.tagRow}>
+                {form.lifestyleTips.map((t) => (
+                  <div key={t.id} style={styles.tag}>
+                    <Lightbulb size={12} />
+                    {t.title}
+                    <button 
+                      type="button" 
+                      style={styles.tagRemove}
+                      onClick={() => updateField("lifestyleTips", form.lifestyleTips.filter(x => x.id !== t.id))}
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
         </form>
 
-        {/* Actions */}
-        <div style={styles.footer}>
-          <button type="button" style={styles.secondaryBtn} onClick={onClose}>Discard Changes</button>
+        {/* FOOTER */}
+        <footer style={styles.footer}>
+          <button onClick={handleClose} style={styles.cancelBtn}>Discard Changes</button>
           <button
             type="submit"
-            disabled={!isValid}
-            style={{
-              ...styles.primaryBtn,
-              backgroundColor: isValid ? "#0f172a" : "#f1f5f9",
-              color: isValid ? "#fff" : "#94a3b8",
+            form="update-form"
+            disabled={!isFormValid || isSubmitting}
+            style={{ 
+              ...styles.saveBtn, 
+              backgroundColor: isFormValid ? "#0f172a" : "#f1f5f9",
+              color: isFormValid ? "#fff" : "#94a3b8"
             }}
           >
-            <Save size={16} /> Confirm Updates
+            {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+            {isSubmitting ? "Updating..." : "Confirm Updates"}
           </button>
-        </div>
+        </footer>
       </div>
     </div>
   );
 }
 
-const styles: Record<string, CSSProperties> = {
-  overlay: { position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.3)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", justifyContent: "flex-end" },
-  drawer: { width: "100%", maxWidth: "500px", backgroundColor: "#fff", height: "100vh", display: "flex", flexDirection: "column", boxShadow: "-20px 0 50px rgba(0,0,0,0.1)" },
-  header: { padding: "32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" },
-  headerTitle: { display: "flex", alignItems: "center", gap: "16px" },
-  iconBox: { width: "44px", height: "44px", borderRadius: "12px", backgroundColor: "#f8fafc", color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center" },
-  title: { margin: 0, fontSize: "18px", fontWeight: 700, color: "#0f172a" },
-  subtitle: { margin: 0, fontSize: "11px", color: "#94a3b8", fontWeight: 700, letterSpacing: "0.5px", marginTop: "4px" },
-  closeBtn: { border: "none", background: "#f1f5f9", padding: "8px", borderRadius: "10px", cursor: "pointer", color: "#64748b" },
-  scrollArea: { flex: 1, overflowY: "auto", padding: "32px" },
-  section: { marginBottom: "32px" },
-  label: { fontSize: "12px", fontWeight: 700, color: "#94a3b8", marginBottom: "10px", display: "block" },
-  select: { width: "100%", height: "48px", borderRadius: "12px", border: "1px solid #e2e8f0", background: "#fff", padding: "0 16px", fontSize: "14px", fontWeight: 500, outline: "none", appearance: "none" },
-  selectArrow: { position: "absolute", right: "16px", top: "17px", color: "#94a3b8", pointerEvents: "none" },
-  textarea: { width: "100%", height: "120px", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "14px", lineHeight: "1.6", outline: "none", resize: "none" },
-  productGrid: { display: "flex", flexDirection: "column", gap: "10px" },
-  productCard: { display: "flex", alignItems: "center", gap: "12px", padding: "12px", borderRadius: "12px", border: "1px solid #f1f5f9", transition: "0.2s" },
-  productImage: { width: "40px", height: "40px", borderRadius: "8px", objectFit: "cover" },
-  pName: { fontSize: "13px", fontWeight: 700, color: "#0f172a" },
-  pBrand: { fontSize: "11px", color: "#94a3b8", fontWeight: 600 },
-  removeBtn: { background: "#fff1f2", border: "none", color: "#e11d48", width: "28px", height: "28px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" },
-  footer: { padding: "32px", borderTop: "1px solid #f1f5f9", display: "flex", gap: "16px" },
-  primaryBtn: { flex: 2, height: "48px", borderRadius: "12px", border: "none", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" },
-  secondaryBtn: { flex: 1, height: "48px", borderRadius: "12px", border: "1px solid #e2e8f0", background: "transparent", color: "#64748b", fontWeight: 600, cursor: "pointer" }
+const styles: Record<string, React.CSSProperties> = {
+  overlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(15, 23, 42, 0.3)",
+    backdropFilter: "blur(4px)",
+    zIndex: 1000,
+    display: "flex",
+    justifyContent: "flex-end",
+    transition: "opacity 0.3s ease-out",
+  },
+  drawer: {
+    width: "min(520px, 100vw)" as any,
+    height: "100vh",
+    background: "#fff",
+    display: "flex",
+    flexDirection: "column",
+    boxShadow: "-20px 0 50px rgba(0,0,0,0.1)",
+    transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+  },
+  header: {
+    padding: "24px 32px",
+    borderBottom: "1px solid #f1f5f9",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerLeft: { display: "flex", alignItems: "center", gap: 16 },
+  badge: { width: 42, height: 42, borderRadius: 12, background: "#f8fafc", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center" },
+  title: { fontSize: 16, fontWeight: 700, color: "#0f172a", margin: 0 },
+  subtitle: { fontSize: 10, color: "#94a3b8", fontWeight: 700, letterSpacing: "0.5px", marginTop: 4 },
+  closeBtn: { border: "none", background: "#f1f5f9", padding: "8px", borderRadius: "10px", cursor: "pointer", color: "#64748b", display: "flex" },
+  body: { flex: 1, overflowY: "auto", padding: "32px", display: "flex", flexDirection: "column", gap: 28 },
+  section: { display: "flex", flexDirection: "column", gap: 20 },
+  secHead: { display: "flex", alignItems: "center", gap: 12 },
+  secLabel: { fontSize: 10, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px" },
+  secLine: { flex: 1, height: "1px", background: "#f1f5f9" },
+  field: { display: "flex", flexDirection: "column", gap: 8 },
+  label: { fontSize: 12, fontWeight: 700, color: "#475569" },
+  input: { width: "100%", padding: "12px", fontSize: 14, border: "1px solid #e2e8f0", borderRadius: 12, outline: "none", transition: "border 0.2s" },
+  select: { appearance: "none", cursor: "pointer", paddingRight: "40px" },
+  selectArrow: { position: "absolute", right: "14px", top: "15px", color: "#94a3b8", pointerEvents: "none" },
+  textarea: { height: "100px", resize: "none", lineHeight: "1.6" },
+  productGrid: { display: "flex", flexDirection: "column", gap: 10, marginTop: 8 },
+  productCard: { display: "flex", alignItems: "center", gap: 12, padding: "12px", background: "#f8fafc", border: "1px solid #f1f5f9", borderRadius: 12, position: "relative" },
+  productThumb: { width: "40px", height: "40px", borderRadius: "8px", objectFit: "cover" },
+  productName: { fontSize: "13px", fontWeight: 700, color: "#0f172a", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
+  productType: { fontSize: "11px", color: "#94a3b8", fontWeight: 600, margin: 0 },
+  removeCircle: { position: "absolute", top: "8px", right: "8px", border: "none", background: "#fff", color: "#e11d48", width: "24px", height: "24px", borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" },
+  tagRow: { display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 },
+  tag: { padding: "6px 12px", background: "#f1f5f9", borderRadius: "20px", fontSize: "12px", fontWeight: 600, color: "#475569", display: "flex", alignItems: "center", gap: 8 },
+  tagRemove: { border: "none", background: "none", cursor: "pointer", padding: 0, color: "#94a3b8", display: "flex" },
+  footer: { padding: "24px 32px", borderTop: "1px solid #f1f5f9", display: "flex", gap: "16px" },
+  cancelBtn: { flex: 1, height: "48px", borderRadius: "12px", border: "1px solid #e2e8f0", background: "transparent", color: "#64748b", fontWeight: 700, cursor: "pointer" },
+  saveBtn: { flex: 2, height: "48px", borderRadius: "12px", border: "none", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", cursor: "pointer", transition: "0.2s" },
 };

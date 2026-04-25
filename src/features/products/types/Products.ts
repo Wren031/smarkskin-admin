@@ -1,12 +1,12 @@
-import type { ProductStatus } from "./ProductStatus";
+
 
 export interface Products {
-    id: number;
+    id: string;
     product_name: string;
-    brand: string;
+    type: string;
     price: number;
     image_url: string;
-    description: string;
-    status: ProductStatus;
+    usage: string; 
+    instructions: string;
+    created_at: string;
 }
-    

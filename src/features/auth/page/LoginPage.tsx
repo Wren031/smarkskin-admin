@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { CSSProperties } from "react";
-import { Lock, Mail, ArrowRight, ShieldCheck, ChevronRight } from "lucide-react";
+import { Lock, Mail, ChevronRight } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 
 export default function LoginPage() {
@@ -15,29 +15,6 @@ export default function LoginPage() {
 
   return (
     <div style={styles.container}>
-      {/* LEFT SIDE: Brand/Visual Section */}
-      <section style={styles.visualSide}>
-        <div style={styles.imageOverlay}>
-          <div style={styles.brandContent}>
-            <div style={styles.miniLogo}>
-              <ShieldCheck size={28} color="#fff" />
-            </div>
-            <h2 style={styles.visualTitle}>Enterprise Guard</h2>
-            <p style={styles.visualText}>
-              The centralized administrative backbone for your organization's infrastructure.
-            </p>
-            
-            <div style={styles.testimonialCard}>
-              <p style={styles.quote}>
-                "The most robust security protocol we've implemented this year."
-              </p>
-              <span style={styles.author}>— CTO, Nexus Systems</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* RIGHT SIDE: Auth Section */}
       <section style={styles.authSide}>
         <div style={styles.loginWrapper}>
           <div style={styles.header}>
@@ -122,69 +99,28 @@ export default function LoginPage() {
 const styles: Record<string, CSSProperties> = {
   container: {
     display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
     minHeight: "100vh",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f8fafc", // Light gray background for the whole page
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
   },
-  // Visual Side
-  visualSide: {
-    flex: 1.2,
-    backgroundImage: "url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80')",
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    position: "relative",
-    display: "flex",
-    flexDirection: "column",
-  },
-  imageOverlay: {
-    flex: 1,
-    background: "linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.4) 100%)",
-    padding: "80px",
-    display: "flex",
-    alignItems: "center",
-  },
-  brandContent: {
-    maxWidth: "480px",
-    color: "white",
-  },
-  miniLogo: {
-    width: "56px",
-    height: "56px",
-    borderRadius: "14px",
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: "32px",
-    backdropFilter: "blur(10px)",
-    border: "1px solid rgba(255, 255, 255, 0.2)",
-  },
-  visualTitle: { fontSize: "42px", fontWeight: 800, marginBottom: "20px", letterSpacing: "-0.02em" },
-  visualText: { fontSize: "18px", lineHeight: "1.6", color: "#cbd5e1", marginBottom: "48px" },
-  testimonialCard: {
-    padding: "24px",
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
-    borderRadius: "16px",
-    backdropFilter: "blur(8px)",
-    border: "1px solid rgba(255, 255, 255, 0.1)",
-  },
-  quote: { fontStyle: "italic", fontSize: "16px", color: "#f8fafc", marginBottom: "12px" },
-  author: { fontSize: "13px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase" },
-
-  // Auth Side
   authSide: {
-    flex: 1,
+    width: "100%",
+    maxWidth: "480px",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
-    padding: "40px",
+    padding: "60px 40px",
+    borderRadius: "20px",
+    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)",
+    margin: "20px",
   },
   loginWrapper: {
     width: "100%",
-    maxWidth: "420px",
   },
-  header: { marginBottom: "40px" },
+  header: { marginBottom: "40px", textAlign: "center" },
   badge: {
     display: "inline-flex",
     alignItems: "center",
@@ -204,7 +140,7 @@ const styles: Record<string, CSSProperties> = {
 
   form: { display: "flex", flexDirection: "column", gap: "24px" },
   inputGroup: { display: "flex", flexDirection: "column", gap: "8px" },
-  label: { fontSize: "14px", fontWeight: 600, color: "#334155" },
+  label: { fontSize: "14px", fontWeight: 600, color: "#334155", textAlign: "left" },
   inputWrapper: { position: "relative", display: "flex", alignItems: "center" },
   icon: { position: "absolute", left: "14px", color: "#94a3b8" },
   input: {

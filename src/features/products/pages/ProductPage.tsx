@@ -6,16 +6,16 @@ import SearchContainer from "../../../components/SearchContainer";
 import useProducts from "../hooks/useProducts";
 import TitleSize from "../../../styles/TitleSize";
 
-import AddProductModal from "../components/AddProductModal";
-
 import ProductCardList from "../components/ProductCardList";
 import type { Products } from "../types/Products"; // Ensure types are imported
-import EditProductDrawer from "../components/ProductFormDrawer";
+import EditProductDrawer from "../components/EditProductDrawer";
+import AddProductDrawer from "../components/AddProductModal";
 
 export default function ProductPage() {
   const { products, addProduct, deleteProduct, updateProduct } = useProducts();
   const [search, setSearch] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("All");
+
   
   // Modal/Drawer States
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -41,14 +41,16 @@ export default function ProductPage() {
   }, []);
 
   const brands = useMemo(() => {
-    const uniqueBrands = Array.from(new Set(products.map((p) => p.brand))).filter(Boolean);
+    const uniqueBrands = Array.from(new Set(products.map((p) => p.type))).filter(Boolean);
     return ["All", ...uniqueBrands.sort()];
   }, [products]);
 
+
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
-      const matchesSearch = (product.product_name?.toLowerCase() || "").includes(search.toLowerCase());
-      const matchesBrand = selectedBrand === "All" || product.brand === selectedBrand;
+      const matchesSearch = (product.product_name?.toLowerCase() || "").includes(search.toLowerCase()) ||
+                            (product.type?.toLowerCase() || "").includes(search.toLowerCase());
+      const matchesBrand = selectedBrand === "All" || product.type === selectedBrand;
       return matchesSearch && matchesBrand;
     });
   }, [products, search, selectedBrand]);
@@ -190,7 +192,7 @@ export default function ProductPage() {
       </div>
 
       {/* DRAWER & MODAL COMPONENTS */}
-      <AddProductModal 
+      <AddProductDrawer 
         isOpen={isAddOpen} 
         onClose={() => setIsAddOpen(false)} 
         onSave={addProduct} 

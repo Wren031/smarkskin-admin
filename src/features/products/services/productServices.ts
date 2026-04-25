@@ -34,25 +34,39 @@ export const productServices = {
     return data.publicUrl;
   },
 
-  async create(product: Omit<Products, "id">): Promise<Products | null> {
+
+  async create(product: Omit<Products, "id" | "created_at">): Promise<Products | null> {
+      const { data, error } = await supabase
+        .from("tbl_products")
+        .insert([{
+          product_name: product.product_name,
+          type: product.type,
+          price: product.price,
+          image_url: product.image_url,
+          usage: product.usage,
+          instructions: product.instructions,
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error creating product:", error.message);
+        return null;
+      }
+      return data;
+    },
+
+async update(id: string, updates: Partial<Products>): Promise<Products | null> {
     const { data, error } = await supabase
       .from("tbl_products")
-      .insert([product])
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error creating product:", error.message);
-      return null;
-    }
-
-    return data;
-  },
-
-  async update(id: number, updates: Partial<Products>): Promise<Products | null> {
-    const { data, error } = await supabase
-      .from("tbl_products")
-      .update(updates)
+      .update({
+          product_name: updates.product_name,
+          type: updates.type,
+          price: updates.price,
+          image_url: updates.image_url,
+          usage: updates.usage,
+          instructions: updates.instructions,
+      })
       .eq("id", id)
       .select()
       .single();
@@ -61,11 +75,10 @@ export const productServices = {
       console.error("Error updating product:", error.message);
       return null;
     }
-
     return data;
   },
 
-  async delete(id: number): Promise<boolean> {
+async delete(id: string): Promise<boolean> { // Ensure id is string if using UUID
     const { error } = await supabase
       .from("tbl_products")
       .delete()
@@ -75,7 +88,6 @@ export const productServices = {
       console.error("Error deleting product:", error.message);
       return false;
     }
-
     return true;
   },
 };

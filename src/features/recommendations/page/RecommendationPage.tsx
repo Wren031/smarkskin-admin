@@ -9,9 +9,10 @@ import UpdateRecommendation from "../components/UpdateRecommendation";
 import ConfirmModal from "../../../components/ConfirmModal";
 import type { Recommendation } from "../types/Recommendation";
 
-import RecommendationDetailModal from "../components/RecommendationDetailModal"; 
+import RecommendationDetailModal from "../components/ViewRecommendationDrawer"; 
 import AddRecommendations from "../components/AddRecommendations";
 import useRecommendations from "../hooks/useRecommendations";
+import ViewRecommendationDrawer from "../components/ViewRecommendationDrawer";
 
 export default function RecommendationPage() {
   const [search, setSearch] = useState("");
@@ -23,9 +24,12 @@ export default function RecommendationPage() {
   const [loading, setLoading] = useState(true);
 
   // Drawer States
-  const [isViewOpen, setIsViewOpen] = useState(false);
+
   const [viewData, setViewData] = useState<Recommendation | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+
+  const [selectedRec, setSelectedRec] = useState(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
@@ -170,6 +174,12 @@ export default function RecommendationPage() {
         onClose={() => setIsViewOpen(false)} 
         data={viewData} 
       />
+
+      <ViewRecommendationDrawer 
+      isOpen={isViewOpen} 
+      onClose={() => setIsViewOpen(false)} 
+      data={selectedRec} 
+    />
 
       {showUpdate && (
         <UpdateRecommendation 
