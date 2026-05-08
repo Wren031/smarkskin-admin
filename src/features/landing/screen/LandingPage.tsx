@@ -95,7 +95,7 @@ const C = {
   slateLight: "#94a3b8",
   border: "#e2e8f0",
   borderDark: "#1e3a5f",
-lt: "#f8fafc",
+bgAlt: "#f8fafc",
   bgDark: "#060d1a",
   white: "#ffffff",
   accent: "#38bdf8",
@@ -522,7 +522,7 @@ export default function LandingPage() {
       {/* CONTACT */}
       <section
         ref={(el: HTMLElement | null) => { sectionRefs.current["Contact"] = el; }}
-        style={{ ...s.section, background: C.bgDark }}
+        style={{ ...s.section, background: C.bgAlt }}
       >
         <div style={{ ...s.container, padding: containerPadding }}>
           <div style={s.sectionHeader}>
@@ -795,7 +795,7 @@ const s: Record<string, React.CSSProperties> = {
   },
   mobileMenuItem: {
     border: "none",
-    background: C.bgDark,
+    background: C.bgAlt,
     padding: "14px",
     borderRadius: "10px",
     textAlign: "left",
@@ -1040,7 +1040,7 @@ const s: Record<string, React.CSSProperties> = {
   },
   sectionDark: {
     padding: "100px 0",
-    background: C.bgDark,
+    background: C.bgAlt,
     position: "relative",
     overflow: "hidden",
   },
@@ -1051,7 +1051,7 @@ const s: Record<string, React.CSSProperties> = {
     transform: "translate(-50%,-50%)",
     width: "800px",
     height: "400px",
-    background: "radial-gradient(ellipse, rgba(255, 255, 255, 0.05) 0%, transparent 70%)",
+    background: "radial-gradient(ellipse, rgba(14,165,233,0.05) 0%, transparent 70%)",
     pointerEvents: "none",
   },
   container: {
@@ -1420,7 +1420,7 @@ const s: Record<string, React.CSSProperties> = {
 
   // footer
   footer: {
-    background: C.bgDark,
+    background: C.bgAlt,
     borderTop: `1px solid ${C.border}`,
     padding: "32px 0",
   },
@@ -1451,6 +1451,6 @@ const s: Record<string, React.CSSProperties> = {
 
   sectionAlt: {
     padding: "100px 0",
-    background: "white",
+    background: C.bgAlt,
   },
 };
