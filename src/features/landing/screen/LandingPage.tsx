@@ -245,7 +245,12 @@ export default function LandingPage() {
               <button style={s.navSignIn} onClick={() => navigate("/login")}>
                 Sign in
               </button>
-              <button style={s.navCta} onClick={() => setShowDownloadModal(true)}>
+              <button style={s.navCta} 
+              
+              // onClick={() => setShowDownloadModal(true)
+ onClick={() => navigate("/login")
+
+              }>
                 <Download size={14} />
                 Download App
               </button>
