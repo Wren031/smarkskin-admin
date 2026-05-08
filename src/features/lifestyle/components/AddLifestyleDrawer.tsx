@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { X, Lightbulb, Type, AlignLeft, Tag, Save, Loader2, Sparkles } from "lucide-react";
+import { X,  Type, AlignLeft, Tag, Save, Loader2, Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
 import { lifestyleServices } from "../services/lifestyleServices";
 import type { LifestyleTip } from "../types/Lifestyle";

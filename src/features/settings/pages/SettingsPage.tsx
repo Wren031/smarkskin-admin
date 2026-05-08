@@ -1,377 +1,340 @@
-import { useState, useEffect } from "react";
-import type { CSSProperties } from "react";
+import { type ChangeEvent, type CSSProperties, useRef, useState, useEffect } from "react";
+import { Camera, Shield, User, Building2, Save, X, Mail, Phone, MapPin, Globe, Activity } from "lucide-react";
+import TitleSize from "../../../styles/TitleSize";
 
-const profileImageSrc = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop";
+const theme = {
+  primary: "#0f172a",
+  accent: "#2563eb",
+  border: "#e2e8f0",
+  textMain: "#0f172a",
+  textMuted: "#64748b",
+  success: "#10b981",
+};
+
+interface FormData {
+  fullName: string;
+  residence: string;
+  email: string;
+  contact: string;
+  company: string;
+  address: string;
+  profileImg: string;
+}
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState("profile");
-  const [isMobile, setIsMobile] = useState(false);
+  // --- 1. Hooks & State ---
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true); // Initial loading state
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Handle responsiveness via window listener
+  const [formData, setFormData] = useState<FormData>({
+    fullName: "Wren Montero Javier",
+    residence: "789 Orchard St, San Francisco, CA 94107",
+    email: "javierrenren1@gmail.com",
+    contact: "09158952698",
+    company: "Global Tech Industries",
+    address: "500 Innovation Way, Silicon Valley, CA 95054",
+    profileImg: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80",
+  });
+
+  // --- 2. Simulation of Data Loading ---
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 800); // Simulate initial fetch
+    return () => clearTimeout(timer);
   }, []);
 
-  // --- Tab Content Components ---
+  // --- 3. Handlers ---
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-  const ProfileContent = () => (
-    <>
-      <section style={styles.contentSection}>
-        <div style={styles.sectionLabel}>Avatar</div>
-        <div style={styles.avatarRow}>
-          <img src={profileImageSrc} alt="User" style={styles.avatar} />
-          <div style={styles.avatarActions}>
-            <button style={styles.btnGhost}>Upload new image</button>
-            <span style={styles.helperText}>JPG, GIF or PNG. Max size of 800K</span>
-          </div>
-        </div>
-      </section>
-      <div style={styles.divider} />
-      <section style={{ 
-        ...styles.formGrid, 
-        gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr" 
-      }}>
-        <div style={styles.inputWrapper}>
-          <label style={styles.fieldLabel}>Display Name</label>
-          <input style={styles.input} type="text" defaultValue="John Doe" />
-        </div>
-        <div style={styles.inputWrapper}>
-          <label style={styles.fieldLabel}>Email Address</label>
-          <input style={styles.input} type="email" defaultValue="johndoe@gmail.com" />
-        </div>
-        <div style={{ ...styles.inputWrapper, gridColumn: isMobile ? "span 1" : "span 2" }}>
-          <label style={styles.fieldLabel}>Bio</label>
-          <textarea style={styles.textarea} defaultValue="Senior Product Designer based in the Philippines." />
-        </div>
-      </section>
-    </>
-  );
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setFormData((prev) => ({ ...prev, profileImg: imageUrl }));
+    }
+  };
 
-  const SecurityContent = () => (
-    <div style={styles.formStack}>
-      <div style={styles.inputWrapper}>
-        <label style={styles.fieldLabel}>Current Password</label>
-        <input style={styles.input} type="password" />
+  // --- 4. Loading State (Internal to keep Sidebar) ---
+  if (loading) {
+    return (
+      <div style={styles.wrapper}>
+        <div style={styles.loaderArea}>
+          <Activity className="animate-spin" size={40} color={theme.primary} />
+          <p style={{ marginTop: 16, color: theme.textMuted, fontWeight: 500 }}>
+            Loading Account Preferences...
+          </p>
+        </div>
+        <style>{`
+          .animate-spin { animation: spin 1s linear infinite; }
+          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        `}</style>
       </div>
-      <div style={styles.inputWrapper}>
-        <label style={styles.fieldLabel}>New Password</label>
-        <input style={styles.input} type="password" />
-      </div>
-      <div style={{
-        ...styles.prefRow, 
-        flexDirection: isMobile ? 'column' : 'row', 
-        alignItems: isMobile ? 'flex-start' : 'center', 
-        gap: '12px'
-      }}>
-        <div style={{ flex: 1 }}>
-          <div style={styles.prefTitle}>Two-Factor Authentication</div>
-          <div style={styles.helperText}>Add an extra layer of security to your account.</div>
-        </div>
-        <button style={styles.btnPrimary}>Enable</button>
-      </div>
-    </div>
-  );
+    );
+  }
 
-  const NotificationContent = () => (
-    <div style={styles.formStack}>
-      {[
-        { t: "Security Alerts", d: "Get notified of new login attempts." },
-        { t: "Desktop Notifications", d: "Show notifications on your system tray." },
-        { t: "Marketing Emails", d: "Updates about new features and products." }
-      ].map((item, i) => (
-        <div key={i} style={styles.prefRow}>
-          <div style={{ flex: 1, paddingRight: '10px' }}>
-            <div style={styles.prefTitle}>{item.t}</div>
-            <div style={styles.helperText}>{item.d}</div>
-          </div>
-          <input type="checkbox" defaultChecked={i < 2} />
-        </div>
-      ))}
-    </div>
-  );
-
+  // --- 5. Main Content ---
   return (
-    <div style={styles.pageWrapper}>
-      <div style={{ 
-        ...styles.appContainer, 
-        flexDirection: isMobile ? "column" : "row",
-        width: isMobile ? "100%" : "840px",
-        height: isMobile ? "auto" : "600px",
-        minHeight: isMobile ? "100vh" : "600px",
-        borderRadius: isMobile ? "0px" : "10px"
-      }}>
-        {/* Sidebar */}
-        <aside style={{ 
-          ...styles.sidebar, 
-          width: isMobile ? "100%" : "200px",
-          borderRight: isMobile ? "none" : "1px solid #F0F0F0",
-          borderBottom: isMobile ? "1px solid #F0F0F0" : "none"
-        }}>
-          <div style={styles.sidebarHeader}>
-            <div style={styles.logoDot} />
-            <span style={styles.sidebarTitle}>Settings</span>
-          </div>
-          <nav style={{ 
-            ...styles.navStack, 
-            flexDirection: isMobile ? "row" : "column",
-            overflowX: isMobile ? "auto" : "visible"
-          }}>
-            <button 
-              onClick={() => setActiveTab("profile")} 
-              style={activeTab === "profile" ? {...styles.navItem, ...styles.navItemActive} : styles.navItem}
-            >
-              General
-            </button>
-            <button 
-              onClick={() => setActiveTab("security")} 
-              style={activeTab === "security" ? {...styles.navItem, ...styles.navItemActive} : styles.navItem}
-            >
-              Security
-            </button>
-            <button 
-              onClick={() => setActiveTab("notifications")} 
-              style={activeTab === "notifications" ? {...styles.navItem, ...styles.navItemActive} : styles.navItem}
-            >
-              Alerts
-            </button>
-          </nav>
-        </aside>
+    <div style={styles.wrapper}>
+      <style>
+        {`
+          .settings-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 32px; }
+          .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+          .responsive-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; gap: 16px; }
 
-        {/* Content */}
-        <main style={styles.mainContent}>
-          <header style={{
-            ...styles.contentHeader, 
-            flexDirection: isMobile ? 'column' : 'row', 
-            gap: isMobile ? '12px' : '16px', 
-            alignItems: isMobile ? 'flex-start' : 'center',
-            padding: isMobile ? '16px 20px' : '20px 32px'
-          }}>
-            <h1 style={styles.sectionTitle}>
-              {activeTab === "profile" && "General Profile"}
-              {activeTab === "security" && "Security & Authentication"}
-              {activeTab === "notifications" && "Notification Preferences"}
-            </h1>
-            <div style={styles.buttonGroup}>
-              <button style={styles.btnSecondary}>Discard</button>
-              <button style={styles.btnPrimary}>Save Changes</button>
+          @media (max-width: 1024px) { .settings-grid { grid-template-columns: 1fr; } }
+          @media (max-width: 640px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .responsive-header { flex-direction: column; align-items: flex-start; }
+            .btn-edit { width: 100%; justify-content: center; }
+            .profile-hero { flex-direction: column; align-items: flex-start !important; text-align: left; }
+          }
+
+          .input-field {
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid ${theme.border};
+            width: 100%;
+            height: 42px;
+            border-radius: 10px;
+            font-size: 14px;
+            padding: 0 12px;
+            background: transparent;
+            box-sizing: border-box;
+          }
+
+          .input-field:focus {
+            border-color: ${theme.accent} !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none;
+          }
+          
+          .input-field:disabled {
+            border-color: transparent;
+            padding-left: 0 !important;
+            cursor: default;
+            color: ${theme.textMain};
+            font-weight: 500;
+          }
+        `}
+      </style>
+
+      <div style={styles.container}>
+        <header className="responsive-header">
+          <TitleSize
+            title="Account Settings"
+            subtitle="Update your profile and organizational presence."
+          />
+          {!isEditing && (
+            <button className="btn-edit" style={styles.btnPrimary} onClick={() => setIsEditing(true)}>
+              Edit Profile
+            </button>
+          )}
+        </header>
+
+        {/* PROFILE HERO */}
+        <section className="profile-hero" style={styles.profileHero}>
+          <div 
+            style={styles.avatarWrapper} 
+            onClick={() => isEditing && fileInputRef.current?.click()}
+          >
+            <img src={formData.profileImg} alt="Profile" style={styles.avatarImg} />
+            {isEditing && (
+              <div style={styles.avatarOverlay}>
+                <Camera size={20} color="white" />
+              </div>
+            )}
+            <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleImageChange} />
+          </div>
+          
+          <div style={styles.heroText}>
+            <h2 style={styles.userName}>{formData.fullName}</h2>
+            <div style={styles.badgeRow}>
+              <span style={styles.infoBadge}><Mail size={12} /> {formData.email}</span>
+              <span style={styles.infoBadge}><Building2 size={12} /> {formData.company}</span>
             </div>
-          </header>
-
-          <div style={{...styles.scrollArea, padding: isMobile ? '20px' : '32px'}}>
-            {activeTab === "profile" && <ProfileContent />}
-            {activeTab === "security" && <SecurityContent />}
-            {activeTab === "notifications" && <NotificationContent />}
           </div>
-        </main>
+        </section>
+
+        <div className="settings-grid">
+          {/* LEFT COLUMN */}
+          <div style={styles.column}>
+            <div style={styles.section}>
+              <div style={styles.sectionHeader}>
+                <User size={16} color={theme.accent} />
+                <span style={styles.sectionLabel}>Identity Details</span>
+              </div>
+              <div className="form-grid">
+                <InputGroup label="Full Name" name="fullName" value={formData.fullName} onChange={handleInputChange} disabled={!isEditing} />
+                <InputGroup label="Phone" name="contact" value={formData.contact} onChange={handleInputChange} disabled={!isEditing} icon={<Phone size={14} />} />
+                <div style={{ gridColumn: "span 1" }}>
+                   <InputGroup label="Location" name="residence" value={formData.residence} onChange={handleInputChange} disabled={!isEditing} icon={<MapPin size={14} />} />
+                </div>
+              </div>
+            </div>
+
+            <div style={styles.section}>
+              <div style={styles.sectionHeader}>
+                <Shield size={16} color={theme.accent} />
+                <span style={styles.sectionLabel}>Security</span>
+              </div>
+              <div className="form-grid">
+                <InputGroup label="New Password" type="password" placeholder="••••••••" disabled={!isEditing} />
+                <InputGroup label="Confirm Password" type="password" placeholder="••••••••" disabled={!isEditing} />
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN */}
+          <div style={styles.column}>
+            <div style={styles.section}>
+              <div style={styles.sectionHeader}>
+                <Building2 size={16} color={theme.accent} />
+                <span style={styles.sectionLabel}>Organization</span>
+              </div>
+              <div style={styles.stack}>
+                <InputGroup label="Company" name="company" value={formData.company} onChange={handleInputChange} disabled={!isEditing} icon={<Globe size={14} />} />
+                <div style={styles.fieldWrapper}>
+                  <label style={styles.fieldLabel}>Address</label>
+                  <textarea
+                    className="input-field"
+                    style={{ ...styles.textArea, border: isEditing ? `1px solid ${theme.border}` : "1px solid transparent", paddingLeft: isEditing ? "12px" : "0" }}
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {isEditing && (
+              <div style={styles.actionRow}>
+                <button style={styles.btnGhost} onClick={() => setIsEditing(false)}>
+                  <X size={16} /> Cancel
+                </button>
+                <button
+                  style={{ ...styles.btnPrimary, backgroundColor: theme.success }}
+                  onClick={() => setIsEditing(false)}
+                >
+                  <Save size={16} /> Save Changes
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
+const InputGroup = ({ label, icon, disabled, ...props }: any) => (
+  <div style={styles.fieldWrapper}>
+    <label style={styles.fieldLabel}>{label}</label>
+    <div style={{ position: "relative" }}>
+      {icon && !disabled && <div style={styles.inputIcon}>{icon}</div>}
+      <input 
+        className="input-field" 
+        disabled={disabled}
+        style={{ paddingLeft: icon && !disabled ? "38px" : disabled ? "0" : "12px" }} 
+        {...props} 
+      />
+    </div>
+  </div>
+);
+
 const styles: Record<string, CSSProperties> = {
-  pageWrapper: {
-    backgroundColor: "#ffffff",
-    minHeight: "100vh",
+  wrapper: { minHeight: "100vh", fontFamily: "'Inter', sans-serif", padding: "clamp(16px, 4vw, 40px)" },
+  container: { maxWidth: "1000px", margin: "0 auto" },
+  loaderArea: {
+    height: "60vh",
     display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
     justifyContent: "center",
-    alignItems: "center",
-    fontFamily: 'Inter, -apple-system, sans-serif',
-    color: "#111",
   },
-  appContainer: {
-    backgroundColor: "#FFF",
-    border: "1px solid #E0E0E0",
+  profileHero: {
     display: "flex",
-    boxShadow: "0 10px 40px rgba(0,0,0,0.04)",
+    alignItems: "center",
+    gap: "24px",
+    marginBottom: "48px",
+    paddingBottom: "32px",
+    borderBottom: `1px solid ${theme.border}`
+  },
+  avatarWrapper: {
+    position: "relative",
+    width: "80px",
+    height: "80px",
+    borderRadius: "20px",
     overflow: "hidden",
+    cursor: "pointer",
+    backgroundColor: "#f1f5f9",
   },
-  sidebar: {
-    padding: "16px 10px",
-    backgroundColor: "#FAFAFA",
-    flexShrink: 0
-  },
-  sidebarHeader: {
+  avatarImg: { width: "100%", height: "100%", objectFit: "cover" },
+  avatarOverlay: {
+    position: "absolute",
+    inset: 0,
+    background: "rgba(0,0,0,0.3)",
     display: "flex",
     alignItems: "center",
-    gap: "8px",
-    padding: "0 12px 16px 12px",
+    justifyContent: "center",
   },
-  logoDot: {
-    width: "12px",
-    height: "12px",
-    backgroundColor: "#000",
-    borderRadius: "3px",
+  heroText: { display: "flex", flexDirection: "column", gap: "6px" },
+  userName: { margin: 0, fontSize: "22px", fontWeight: 700, color: theme.textMain },
+  badgeRow: { display: "flex", flexWrap: "wrap", gap: "8px" },
+  infoBadge: { 
+    display: "flex", 
+    alignItems: "center", 
+    gap: "6px", 
+    fontSize: "13px", 
+    color: theme.textMuted,
   },
-  sidebarTitle: {
-    fontWeight: 600,
-    fontSize: "11px",
-    textTransform: "uppercase",
-    letterSpacing: "0.03em",
-    color: "#888",
-  },
-  navStack: {
-    display: "flex",
-    gap: "4px",
-  },
-  navItem: {
-    background: "transparent",
-    border: "none",
-    textAlign: "left",
-    padding: "8px 12px",
-    borderRadius: "6px",
-    fontSize: "12px",
-    color: "#555",
-    cursor: "pointer",
-    whiteSpace: "nowrap",
-    flexShrink: 0
-  },
-  navItemActive: {
-    backgroundColor: "#EFEFEF",
-    color: "#000",
-    fontWeight: 500,
-  },
-  mainContent: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    minWidth: 0,
-  },
-  contentHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    borderBottom: "1px solid #F0F0F0",
-  },
-  sectionTitle: {
-    margin: 0,
+  column: { display: "flex", flexDirection: "column", gap: "40px" },
+  section: { display: "flex", flexDirection: "column" },
+  sectionHeader: { display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" },
+  sectionLabel: { fontSize: "14px", fontWeight: 700, color: theme.textMain, textTransform: "uppercase", letterSpacing: "0.03em" },
+  stack: { display: "flex", flexDirection: "column", gap: "20px" },
+  fieldWrapper: { display: "flex", flexDirection: "column", gap: "6px" },
+  fieldLabel: { fontSize: "12px", fontWeight: 600, color: theme.textMuted },
+  textArea: {
+    width: "100%",
+    height: "80px",
     fontSize: "14px",
-    fontWeight: 600,
+    color: theme.textMain,
+    resize: "none",
+    boxSizing: "border-box",
+    background: "transparent",
+    outline: "none"
   },
-  buttonGroup: {
-    display: "flex",
-    gap: "8px",
-  },
+  inputIcon: { position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" },
   btnPrimary: {
-    backgroundColor: "#000",
-    color: "#FFF",
+    padding: "10px 20px",
+    backgroundColor: theme.primary,
+    color: "white",
     border: "none",
-    padding: "8px 16px",
-    borderRadius: "6px",
-    fontSize: "11px",
-    fontWeight: 500,
-    cursor: "pointer",
-  },
-  btnSecondary: {
-    backgroundColor: "#FFF",
-    border: "1px solid #E0E0E0",
-    padding: "8px 16px",
-    borderRadius: "6px",
-    fontSize: "11px",
-    fontWeight: 500,
-    cursor: "pointer",
-  },
-  scrollArea: {
-    overflowY: "auto",
-    flex: 1
-  },
-  contentSection: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px",
-  },
-  sectionLabel: {
+    borderRadius: "10px",
     fontWeight: 600,
-    color: "#111",
-    fontSize: "12px"
-  },
-  avatarRow: {
+    fontSize: "14px",
+    cursor: "pointer",
     display: "flex",
     alignItems: "center",
-    gap: "16px",
-  },
-  avatar: {
-    width: "48px",
-    height: "48px",
-    borderRadius: "50%",
-    backgroundColor: "#EEE",
-    flexShrink: 0
-  },
-  avatarActions: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "4px",
+    gap: "8px",
   },
   btnGhost: {
-    background: "none",
-    border: "1px solid #E0E0E0",
-    borderRadius: "4px",
-    padding: "4px 10px",
-    fontSize: "11px",
+    background: "transparent",
+    border: `1px solid ${theme.border}`,
+    color: theme.textMain,
+    padding: "10px 20px",
+    borderRadius: "10px",
+    fontWeight: 600,
+    fontSize: "14px",
     cursor: "pointer",
-    width: "fit-content",
-    color: "#444",
-  },
-  helperText: {
-    fontSize: "11px",
-    color: "#888",
-    lineHeight: "1.4"
-  },
-  divider: {
-    height: "1px",
-    backgroundColor: "#F0F0F0",
-    margin: "24px 0",
-  },
-  formGrid: {
-    display: "grid",
-    gap: "20px",
-  },
-  formStack: {
     display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-    maxWidth: "100%",
-  },
-  inputWrapper: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
-  },
-  fieldLabel: {
-    fontWeight: 500,
-    color: "#666",
-    fontSize: "12px"
-  },
-  input: {
-    border: "1px solid #E0E0E0",
-    padding: "10px 12px",
-    borderRadius: "6px",
-    fontSize: "13px",
-    outline: "none",
-    backgroundColor: "#FFF",
-  },
-  textarea: {
-    border: "1px solid #E0E0E0",
-    padding: "10px 12px",
-    borderRadius: "6px",
-    fontSize: "13px",
-    height: "80px",
-    resize: "none",
-    fontFamily: "inherit",
-  },
-  prefRow: {
-    display: "flex",
-    justifyContent: "space-between",
     alignItems: "center",
-    padding: "16px",
-    backgroundColor: "#FAFAFA",
-    borderRadius: "8px",
-    border: "1px solid #F0F0F0",
+    gap: "8px",
   },
-  prefTitle: {
-    fontWeight: 500,
-    fontSize: "12px",
-    marginBottom: "2px"
-  }
+  actionRow: { display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "12px" },
 };

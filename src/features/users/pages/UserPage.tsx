@@ -59,23 +59,23 @@ const StatCard = ({ title, value, icon: Icon, color, trend, type = 'default' }: 
 
 export default function UserPage() {
   const { users = [], selectedUser, loading, getUserById, clearSelection } = useUser();
-  
-  // Filtering & Dropdown State
+
+  // 1. Move ALL Hooks to the top. Never return early before hooks.
   const [search, setSearch] = useState("");
   const [genderFilter, setGenderFilter] = useState("All");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
+  
   const itemsPerPage = 8;
-
   const genderOptions = ["All", "Male", "Female", "Other"];
 
-  // Click-away listener for Custom Dropdown
+  // Click-away listener
   useEffect(() => {
     const closeDropdown = () => setIsDropdownOpen(false);
-    if (isDropdownOpen) window.addEventListener('click', closeDropdown);
+    if (isDropdownOpen) {
+      window.addEventListener('click', closeDropdown);
+    }
     return () => window.removeEventListener('click', closeDropdown);
   }, [isDropdownOpen]);
 
@@ -89,15 +89,18 @@ export default function UserPage() {
   // Filtering Logic
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
-      const fullName = `${user.first_name} ${user.last_name}`.toLowerCase();
-      const matchesSearch = fullName.includes(search.toLowerCase()) || user.id.toString().includes(search);
+      const fullName = `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase();
+      const matchesSearch = fullName.includes(search.toLowerCase()) || 
+                           user.id?.toString().includes(search);
       const matchesGender = genderFilter === "All" || user.gender === genderFilter;
       return matchesSearch && matchesGender;
     });
   }, [users, search, genderFilter]);
 
   // Reset pagination on filter change
-  useEffect(() => { setCurrentPage(1); }, [search, genderFilter]);
+  useEffect(() => { 
+    setCurrentPage(1); 
+  }, [search, genderFilter]);
 
   // Pagination Math
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage) || 1;
@@ -112,8 +115,14 @@ export default function UserPage() {
 
   const handleCloseDrawer = useCallback(() => {
     setIsDrawerOpen(false);
-    if (clearSelection) clearSelection();
+    // Use optional chaining or check if clearSelection exists
+    clearSelection?.(); 
   }, [clearSelection]);
+
+  // 2. Early return for loading goes AFTER all hooks are declared
+  if (loading) return (
+    <div style={styles.center}><Activity className="animate-spin" color="#0f172a" /></div>
+  );
 
   return (
     <div style={styles.page}>
@@ -136,20 +145,20 @@ export default function UserPage() {
           background-color: #f8fafc !important;
           color: #6366f1 !important;
         }
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
 
       <div style={styles.headerSection}>
-        <TitleSize title="User Analytics" subtitle="Real-time monitoring of user demographics and status." />
+        <TitleSize title="Users Monitoring" subtitle="Real-time monitoring of user demographics and status." />
       </div>
 
-      {/* Analytics Grid */}
       <div style={styles.statsGrid}>
         <StatCard title="Total Registry" value={stats.total} icon={Users} color="#6366f1" />
         <StatCard title="Active Patients" value={stats.active} icon={Activity} color="#10b981" type="active" />
         <StatCard title="Inactive Accounts" value={stats.inactive} icon={UserX} color="#ef4444" type="inactive" />
       </div>
 
-      {/* Filter & Table Container */}
       <div style={styles.tableContainer}>
         <div style={styles.filterBar}>
           <div style={styles.searchWrapper}>
@@ -164,7 +173,6 @@ export default function UserPage() {
             />
           </div>
 
-          {/* Modern Dropdown */}
           <div 
             style={styles.dropdownContainer} 
             onClick={(e) => {
@@ -231,13 +239,11 @@ export default function UserPage() {
   );
 }
 
-// --- STYLES ---
-
 const styles: Record<string, CSSProperties> = {
-  page: { padding: "32px 48px", background: "#fdfdfe", minHeight: "100vh" },
+  page: { padding: '20px' },
+  center: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' },
   headerSection: { marginBottom: "32px" },
   statsGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "20px", marginBottom: "40px" },
-  
   statCard: { 
     background: "#fff", padding: "24px", borderRadius: "24px", border: "1px solid #f1f5f9", 
     position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", 
@@ -251,15 +257,11 @@ const styles: Record<string, CSSProperties> = {
   statLabel: { fontSize: "13px", color: "#64748b", fontWeight: 600 },
   statValue: { margin: 0, fontSize: "28px", fontWeight: 800, color: "#0f172a" },
   bgDecoration: { position: "absolute", bottom: "-10px", right: "-5px", color: "#f8fafc", zIndex: 1, transform: "rotate(-10deg)" },
-
   tableContainer: { background: "#fff", borderRadius: "24px", border: "1px solid #f1f5f9", overflow: "hidden" },
   filterBar: { padding: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap" },
-  
   searchWrapper: { position: "relative", width: "380px", maxWidth: "100%" },
   searchIcon: { position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" },
   searchInput: { width: "100%", padding: "12px 16px 12px 48px", borderRadius: "14px", border: "1px solid #e2e8f0", background: "#f8fafc", outline: "none", transition: "all 0.2s" },
-
-  // Dropdown Specific Styles
   dropdownContainer: { position: "relative", width: "190px", cursor: "pointer", userSelect: "none" },
   dropdownTrigger: { 
     display: "flex", alignItems: "center", justifyContent: "space-between", 

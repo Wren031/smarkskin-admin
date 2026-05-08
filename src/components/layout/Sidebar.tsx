@@ -1,234 +1,161 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  LayoutDashboard,
-  Users,
-  Package,
-  Sparkles,
-  FileText,
-  Settings,
-  User,
-  Dna,
-  LogOut,
-  UserRoundSearch,
-  HeartPulse,
+  LayoutDashboard, Users, Package, Sparkles, FileText,
+  Settings, User, Dna, UserRoundSearch, HeartPulse
 } from "lucide-react";
+import { admin_skin_result_service } from "../../features/scan/service/admin_skin_result_service";
 
-// --- Types ---
-type MenuItem = { to: string; label: string; icon: React.ElementType; section?: string };
-type SidebarProps = {
-  collapsed: boolean;
-  user: { name: string; phone: string };
-  onLogout: () => void;
-};
-
-// --- Menu Configuration ---
-const MENU: MenuItem[] = [
-  { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/admin/users", label: "Users", icon: Users, section: "Management" },
-  { to: "/admin/products", label: "Products", icon: Package },
-  { to: "/admin/recommendation", label: "Recommendations", icon: Sparkles, section: "Analysis" },
-  { to: "/admin/condition", label: "Skin Analysis", icon: Dna },
-  { to: "/admin/users-scan", label: "Diagnostic History", icon: UserRoundSearch },
-  { to: "/admin/lifestyle", label: "Lifestyle Tips", icon: HeartPulse, section: "Content" },
-  { to: "/admin/report", label: "Reports", icon: FileText },
-  { to: "/admin/settings", label: "Settings", icon: Settings, section: "System" },
-];
-
-export default function Sidebar({ collapsed, user, onLogout }: SidebarProps) {
-  const [isHovered, setIsHovered] = useState(false);
-  const location = useLocation();
-  const isExpanded = !collapsed || isHovered;
-
-  return (
-    <>
-      <style>{dynamicStyles}</style>
-      <aside
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        style={{
-          ...styles.sidebar,
-          width: isExpanded ? "280px" : "80px",
-        }}
-      >
-        {/* Profile Section */}
-        <div style={styles.profileWrapper}>
-          <div style={{
-            ...styles.profileCard,
-            justifyContent: isExpanded ? "flex-start" : "center",
-            backgroundColor: isExpanded ? "#f8fafc" : "transparent"
-          }}>
-            <div style={styles.avatar}>
-              <User size={20} color="#fff" strokeWidth={2.5} />
-            </div>
-            {isExpanded && (
-              <div style={styles.profileText}>
-                <span style={styles.userName}>{user.name}</span>
-                <span style={styles.userBadge}>Administrator</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Navigation Section */}
-        <nav style={styles.navScroll}>
-          {MENU.map((item) => {
-            const isActive = location.pathname === item.to;
-            const Icon = item.icon;
-            
-            return (
-              <React.Fragment key={item.to}>
-                {item.section && isExpanded && (
-                  <div style={styles.sectionHeader}>{item.section}</div>
-                )}
-                
-                <NavLink to={item.to} style={{ textDecoration: "none" }}>
-                  <div 
-                    className={`nav-item ${isActive ? "active" : ""}`}
-                    style={{
-                      ...styles.navItem,
-                      justifyContent: isExpanded ? "flex-start" : "center",
-                    }}
-                  >
-                    <Icon 
-                      size={20} 
-                      className="nav-icon"
-                      strokeWidth={isActive ? 2.5 : 2}
-                      style={{ flexShrink: 0 }}
-                    />
-                    {isExpanded && (
-                      <span style={styles.navLabel}>{item.label}</span>
-                    )}
-                  </div>
-                </NavLink>
-              </React.Fragment>
-            );
-          })}
-        </nav>
-
-        {/* Footer */}
-        <div style={styles.footer}>
-          <button 
-            onClick={onLogout} 
-            className="logout-btn"
-            style={{
-              ...styles.logoutAction,
-              justifyContent: isExpanded ? "flex-start" : "center",
-            }}
-          >
-            <LogOut size={20} color="#e11d48" style={{ flexShrink: 0 }} />
-            {isExpanded && (
-              <span style={{ ...styles.navLabel, color: "#e11d48" }}>Sign Out</span>
-            )}
-          </button>
-        </div>
-      </aside>
-    </>
-  );
+interface MenuItem {
+  to: string;
+  label: string;
+  icon: React.ElementType;
+  section?: string;
+  count?: number;
 }
 
-// --- Styles ---
-const styles: Record<string, React.CSSProperties> = {
-  sidebar: {
-    height: "100vh",
-    backgroundColor: "#ffffff",
-    borderRight: "1px solid #f1f5f9",
-    display: "flex",
-    flexDirection: "column",
-    position: "sticky",
-    top: 0,
-    transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-    zIndex: 1000,
-    overflow: "hidden", // Keep the rail clean
-  },
-  profileWrapper: { padding: "20px 14px", flexShrink: 0 },
-  profileCard: {
-    display: "flex",
-    alignItems: "center",
-    padding: "10px",
-    borderRadius: "12px",
-    gap: "12px",
-    transition: "all 0.3s ease",
-  },
-  avatar: {
-    width: "40px",
-    height: "40px",
-    backgroundColor: "#0f172a",
-    borderRadius: "10px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  profileText: {
-    display: "flex",
-    flexDirection: "column",
-    whiteSpace: "nowrap",
-    animation: "fadeIn 0.4s ease forwards",
-  },
-  userName: { fontSize: "14px", fontWeight: 700, color: "#0f172a" },
-  userBadge: { fontSize: "11px", color: "#94a3b8" },
-  navScroll: { flex: 1, padding: "0 14px", overflowY: "auto", overflowX: "hidden" },
-  sectionHeader: {
-    fontSize: "10px",
-    fontWeight: 800,
-    color: "#cbd5e1",
-    textTransform: "uppercase",
-    letterSpacing: "0.1em",
-    padding: "24px 12px 8px",
-    animation: "fadeIn 0.3s ease forwards",
-  },
-  navItem: {
-    display: "flex",
-    alignItems: "center",
-    padding: "12px",
-    margin: "4px 0",
-    borderRadius: "10px",
-    cursor: "pointer",
-    transition: "all 0.2s ease",
-  },
-  navLabel: {
-    marginLeft: "12px",
-    fontSize: "14px",
-    fontWeight: 500,
-    color: "#475569",
-    whiteSpace: "nowrap",
-    animation: "fadeIn 0.3s ease forwards",
-  },
-  footer: { padding: "16px 14px", borderTop: "1px solid #f1f5f9" },
-  logoutAction: {
-    width: "100%",
-    display: "flex",
-    alignItems: "center",
-    padding: "12px",
-    borderRadius: "10px",
-    border: "none",
-    backgroundColor: "transparent",
-    cursor: "pointer",
-  }
-};
+interface SidebarProps {
+  collapsed: boolean;
+  setCollapsed: (val: boolean) => void;
+  user: { name: string; phone?: string };
+  onLogout: () => void;
+}
 
-const dynamicStyles = `
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateX(-5px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
+export default function Sidebar({ collapsed, setCollapsed, user}: SidebarProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [todayScanCount, setTodayScanCount] = useState<number>(0);
+  const location = useLocation();
+  
+  const isExpanded = !collapsed || isHovered;
+  const DIAGNOSTIC_ROUTE = "/admin/users-scan";
 
-  nav::-webkit-scrollbar { width: 0; }
-  
-  .nav-item:hover { background-color: #f8fafc; }
-  
-  .nav-item.active {
-    background-color: #0f172a;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
-  }
-  
-  .nav-item.active .nav-icon { color: #ffffff !important; }
-  .nav-item.active span { color: #ffffff !important; }
-  
-  .nav-icon { color: #64748b; }
-  .nav-item:hover .nav-icon { color: #0f172a; }
-  .nav-item.active:hover .nav-icon { color: #ffffff; }
+  useEffect(() => {
+    const fetchCount = async () => {
+      if (location.pathname !== DIAGNOSTIC_ROUTE) {
+        try {
+          const count = await admin_skin_result_service.getTodayScanCount();
+          setTodayScanCount(count);
+        } catch (error) {
+          console.error("Failed to fetch scan count", error);
+        }
+      }
+    };
+    fetchCount();
+  }, [location.pathname]);
 
-  .logout-btn:hover { background-color: #fff1f2; }
-`;
+  useEffect(() => {
+    if (location.pathname === DIAGNOSTIC_ROUTE) {
+      setTodayScanCount(0);
+    }
+  }, [location.pathname]);
+
+  // --- RESPONSIVE AUTO-CLOSE LOGIC ---
+  const handleItemClick = () => {
+    // 1024px is usually the breakpoint where the sidebar becomes an overlay or mobile menu
+    const isMobile = window.innerWidth < 1024; 
+    
+    if (isMobile) {
+      setCollapsed(true); // Close the sidebar on mobile
+      setIsHovered(false); // Reset hover state
+    }
+  };
+
+  const MENU: MenuItem[] = [
+    { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/admin/users", label: "Users", icon: Users, section: "Management" },
+    { to: "/admin/products", label: "Products", icon: Package },
+    { to: "/admin/recommendation", label: "Recommendations", icon: Sparkles, section: "Analysis" },
+    { to: "/admin/condition", label: "Skin Analysis", icon: Dna },
+    { 
+        to: DIAGNOSTIC_ROUTE, 
+        label: "Diagnostic History", 
+        icon: UserRoundSearch, 
+        count: todayScanCount
+    },
+    { to: "/admin/lifestyle", label: "Lifestyle Tips", icon: HeartPulse, section: "Content" },
+    { to: "/admin/report", label: "Reports", icon: FileText },
+    { to: "/admin/settings", label: "Settings", icon: Settings, section: "System" },
+  ];
+
+  return (
+    <motion.aside
+      initial={false}
+      animate={{ width: isExpanded ? 280 : 80 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="h-screen sticky top-0 bg-white border-r border-slate-100 flex flex-col z-[1000] overflow-hidden transition-all duration-300 shadow-sm"
+    >
+      {/* Profile Section */}
+      <div className="p-4 mb-2">
+        <div className={`flex items-center gap-3 p-2 rounded-2xl transition-all ${isExpanded ? 'bg-slate-50' : 'justify-center bg-transparent'}`}>
+          <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-slate-200 text-white">
+            <User size={18} strokeWidth={2.5} />
+          </div>
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="overflow-hidden whitespace-nowrap">
+                <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
+                <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Administrator</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 px-4 overflow-y-auto space-y-1 custom-scrollbar">
+        {MENU.map((item) => {
+          const isActive = location.pathname === item.to;
+          const Icon = item.icon;
+
+          return (
+            <React.Fragment key={item.to}>
+              {item.section && isExpanded && (
+                <div className="px-3 pt-6 pb-2 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
+                  {item.section}
+                </div>
+              )}
+
+              <NavLink 
+                to={item.to} 
+                className="block group"
+                onClick={handleItemClick} // Logic handles responsive closing
+              >
+                <div className={`flex items-center gap-3 p-3 rounded-xl transition-all relative ${
+                  isActive ? "bg-slate-900 text-white shadow-md shadow-slate-200" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                } ${!isExpanded && "justify-center"}`}>
+                  <Icon size={20} strokeWidth={isActive ? 2.5 : 2} className="shrink-0" />
+                  
+                  {isExpanded && (
+                    <span className="text-sm font-semibold whitespace-nowrap flex-1">{item.label}</span>
+                  )}
+
+                  {/* Notification Badge */}
+                  {item.count !== undefined && item.count > 0 && (
+                    <motion.div 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className={`font-black transition-all ${
+                      isExpanded 
+                        ? "px-2 py-0.5 rounded-lg text-[10px]" 
+                        : "absolute -top-1 -right-1 w-5 h-5 rounded-full text-[9px] flex items-center justify-center border-2 border-white"
+                    } ${isActive ? "bg-indigo-500 text-white" : "bg-indigo-100 text-indigo-600"}`}>
+                      {item.count}
+                    </motion.div>
+                  )}
+                </div>
+              </NavLink>
+            </React.Fragment>
+          );
+        })}
+      </nav>
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #f1f5f9; border-radius: 10px; }
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #e2e8f0; }
+      `}</style>
+    </motion.aside>
+  );
+}

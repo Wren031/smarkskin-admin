@@ -20,7 +20,7 @@ import ReportPage from "../features/reports/page/ReportPage";
 
 // Scans
 import UserScanPage from "../features/scan/screen/UserScanPage";
-import ViewScanPage from "../features/scan/screen/ViewScan";
+
 
 // Lifestyle (New Feature)
 import LifestylePage from "../features/lifestyle/page/LifestylePage";
@@ -51,7 +51,6 @@ export default function AppRoutes() {
 
           {/* Scan Feature Set */}
           <Route path="users-scan" element={<UserScanPage />} />
-          <Route path="scans/:id" element={<ViewScanPage />} />
 
           {/* Lifestyle Feature Set */}
           <Route path="lifestyle" element={<LifestylePage />} />

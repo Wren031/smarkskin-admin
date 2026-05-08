@@ -1,6 +1,7 @@
 
 
 export interface Products {
+    lifestyle_tips: boolean;
     id: string;
     product_name: string;
     type: string;

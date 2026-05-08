@@ -1,21 +1,25 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { Menu, Bell, Search, MoreVertical, User, Settings, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom"; // 1. Import useNavigate
 
 // --- Types ---
 interface TopHeaderProps {
   isDesktop: boolean;
   setMobileOpen: (value: boolean) => void;
   userName?: string;
-  onToggleSidebar?: () => void; // Added for desktop collapse logic
+  onToggleSidebar?: () => void;
+  onLogout?: () => void; // 2. Add optional logout prop
 }
 
 export default function TopHeader({
   isDesktop,
   setMobileOpen,
   userName = "Admin",
+  onLogout,
 }: TopHeaderProps) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate(); // 3. Initialize navigate
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -26,6 +30,22 @@ export default function TopHeader({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // --- Handlers ---
+  const handleProfileClick = () => {
+    setShowMenu(false);
+    navigate("/admin/settings"); // Change this path to your profile route
+  };
+
+  const handleLogoutClick = () => {
+    setShowMenu(false);
+    if (onLogout) {
+      onLogout();
+    } else {
+      // Fallback if no prop is provided
+      navigate("/login"); 
+    }
+  };
 
   const dateStr = useMemo(() => {
     return new Date().toLocaleDateString("en-US", {
@@ -109,10 +129,26 @@ export default function TopHeader({
                 <span style={{ fontWeight: 700, color: "#0f172a" }}>{userName}</span>
                 <span style={{ fontSize: "11px", color: "#94a3b8" }}>Administrator</span>
               </div>
-              <div className="dropdown-item" style={dropdownItemStyle}><User size={15} /> Profile</div>
-              <div className="dropdown-item" style={dropdownItemStyle}><Settings size={15} /> Settings</div>
+              
+              {/* Profile Link */}
+              <div 
+                className="dropdown-item" 
+                style={dropdownItemStyle}
+                onClick={handleProfileClick}
+              >
+                <User size={15} /> Profile
+              </div>
+
+              <div className="dropdown-item" style={dropdownItemStyle}>
+                <Settings size={15} /> Settings
+              </div>
+              
               <hr style={dividerStyle} />
-              <div className="dropdown-item" style={{ ...dropdownItemStyle, color: "#e11d48" }}>
+              <div 
+                className="dropdown-item" 
+                style={{ ...dropdownItemStyle, color: "#e11d48" }}
+                onClick={handleLogoutClick}
+              >
                 <LogOut size={15} /> Logout
               </div>
             </div>
@@ -123,7 +159,7 @@ export default function TopHeader({
   );
 }
 
-// --- Professional Styles ---
+// ... (Rest of your styles remain exactly the same)
 
 const headerContainerStyle: React.CSSProperties = {
   height: "80px", // Slightly taller for a more spacious feel

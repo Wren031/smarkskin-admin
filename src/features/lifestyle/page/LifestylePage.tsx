@@ -1,21 +1,41 @@
-import React, { useState, useMemo, useCallback } from "react";
-import { Plus, Sparkles, LayoutGrid, Search } from "lucide-react"; // Removed Filter import
+import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { Plus, Sparkles, Search, Activity } from "lucide-react";
 import { useLifestyle } from "../hooks/useLifestyle";
 import LifestyleCard from "../components/LifestyleCard";
 import AddLifestyleDrawer from "../components/AddLifestyleDrawer";
 import type { LifestyleTip } from "../types/Lifestyle";
 
 export default function LifestylePage() {
-  const { tips, fetchTips, handleDelete, loading } = useLifestyle();
+  // --- 1. Hooks & Data Fetching ---
+  const { tips = [], fetchTips, handleDelete, loading: hookLoading } = useLifestyle();
   
-  // UI State
+  // --- 2. State Hooks ---
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedTip, setSelectedTip] = useState<LifestyleTip | null>(null);
-
-  // Filter State
   const [searchQuery, setSearchQuery] = useState("");
+  const [isFullyReady, setIsFullyReady] = useState(false);
 
-  // --- Handlers ---
+  // --- 3. Side Effects ---
+  useEffect(() => {
+    if (!hookLoading) {
+      const timer = setTimeout(() => setIsFullyReady(true), 400);
+      return () => clearTimeout(timer);
+    } else {
+      setIsFullyReady(false);
+    }
+  }, [hookLoading]);
+
+  // --- 4. Memoized Logic (Must be before conditional returns) ---
+  const filteredTips = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+    return tips.filter((tip) => {
+      return !query || 
+        tip.title?.toLowerCase().includes(query) || 
+        tip.description?.toLowerCase().includes(query);
+    });
+  }, [tips, searchQuery]);
+
+  // --- 5. Handlers ---
   const handleOpenDrawer = useCallback((tip?: LifestyleTip) => {
     setSelectedTip(tip || null);
     setIsDrawerOpen(true);
@@ -30,29 +50,35 @@ export default function LifestylePage() {
     setSearchQuery("");
   };
 
-  // --- Memoized Logic ---
-  const filteredTips = useMemo(() => {
-    const query = searchQuery.toLowerCase().trim();
-    
-    return tips.filter((tip) => {
-      return !query || 
-        tip.title.toLowerCase().includes(query) || 
-        tip.description.toLowerCase().includes(query);
-    });
-  }, [tips, searchQuery]);
+  // --- 6. Content Conditional Rendering ---
+  // If loading, we return the container but with the loader INSIDE it.
+  // This ensures the sidebar (which wraps this component) stays visible.
+  if (!isFullyReady) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.loaderArea}>
+          <Activity className="animate-spin" size={42} color="#0f172a" />
+          <p style={styles.loadingText}>Synchronizing Wellness Library...</p>
+        </div>
+        <style>{`
+          .animate-spin { animation: spin 1s linear infinite; }
+          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        `}</style>
+      </div>
+    );
+  }
 
+  // --- 7. Main Page Content (Shown after loading) ---
   return (
     <div style={styles.container}>
-      {/* Decorative Background */}
+      {/* Decorative background mesh */}
       <div style={styles.meshGradient} aria-hidden="true" />
 
       {/* Header Section */}
       <header style={styles.header}>
-
-          <div>
-            <h1 style={styles.title}>Lifestyle Tips</h1>
-            <p style={styles.subtitle}>Curate and manage wellness content for the mobile ecosystem.</p>
-
+        <div>
+          <h1 style={styles.title}>Manage Daily Routine & Lifestyle Tips</h1>
+          <p style={styles.subtitle}>Curate and manage wellness content for the mobile ecosystem.</p>
         </div>
         
         <button 
@@ -65,7 +91,7 @@ export default function LifestylePage() {
         </button>
       </header>
 
-      {/* Search Bar (Category Filter Removed) */}
+      {/* Search Bar */}
       <section style={styles.filterBar}>
         <div style={styles.searchWrapper}>
           <Search size={18} color="#94a3b8" style={styles.searchIcon} />
@@ -79,11 +105,9 @@ export default function LifestylePage() {
         </div>
       </section>
 
-      {/* Content Grid */}
+      {/* Grid Content */}
       <main style={styles.main}>
-        {loading ? (
-          <LoadingState />
-        ) : filteredTips.length > 0 ? (
+        {filteredTips.length > 0 ? (
           <div style={styles.grid}>
             {filteredTips.map(tip => (
               <LifestyleCard 
@@ -102,7 +126,7 @@ export default function LifestylePage() {
         )}
       </main>
 
-      {/* Modals/Drawers */}
+      {/* Drawer */}
       <AddLifestyleDrawer 
         isOpen={isDrawerOpen} 
         onClose={handleCloseDrawer} 
@@ -115,14 +139,7 @@ export default function LifestylePage() {
   );
 }
 
-// --- Internal Sub-Components ---
-const LoadingState = () => (
-  <div style={styles.loaderContainer}>
-    <div className="spinner" />
-    <p style={styles.loadingText}>Syncing wellness library...</p>
-  </div>
-);
-
+// --- Sub-Components ---
 const EmptyState = ({ isFiltered, onClear }: { isFiltered: boolean, onClear: () => void }) => (
   <div style={styles.emptyState}>
     <div style={styles.emptyIconWrapper}>
@@ -144,15 +161,8 @@ const EmptyState = ({ isFiltered, onClear }: { isFiltered: boolean, onClear: () 
   </div>
 );
 
-// --- CSS-in-JS Styles ---
+// --- CSS-in-JS ---
 const globalStyles = `
-  .spinner { 
-    width: 24px; height: 24px; border: 3px solid #e2e8f0; 
-    border-top-color: #0f172a; border-radius: 50%; 
-    animation: spin 0.8s linear infinite; 
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  
   .interactive-btn:hover { 
     background: #1e293b !important; 
     transform: translateY(-1px); 
@@ -164,12 +174,25 @@ const globalStyles = `
 const styles: Record<string, React.CSSProperties> = {
   container: { 
     padding: "60px 40px", 
-
     margin: "0 auto", 
     minHeight: "100vh", 
     position: "relative", 
     backgroundColor: "#fff",
     fontFamily: "Inter, system-ui, sans-serif" 
+  },
+  loaderArea: {
+    height: "calc(100vh - 120px)", // Adjusted to stay within page bounds
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingText: { 
+    marginTop: "16px", 
+    color: "#64748b", 
+    fontWeight: 500, 
+    fontSize: "15px"
   },
   meshGradient: { 
     position: "absolute", 
@@ -183,13 +206,6 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: "space-between", 
     alignItems: "flex-end", 
     marginBottom: "48px" 
-  },
-  titleWrapper: { display: "flex", alignItems: "center", gap: "20px" },
-  iconHeader: { 
-    width: "56px", height: "56px", 
-    background: "#f1f5f9", borderRadius: "16px", 
-    display: "flex", alignItems: "center", justifyContent: "center", 
-    border: "1px solid #e2e8f0" 
   },
   title: { 
     fontSize: "32px", fontWeight: 800, 
@@ -206,10 +222,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   filterBar: { 
     display: "flex", 
-    gap: "16px", 
     marginBottom: "40px", 
-    alignItems: "center",
-    flexWrap: "wrap" 
+    alignItems: "center" 
   },
   searchWrapper: { 
     position: "relative", 
@@ -228,11 +242,6 @@ const styles: Record<string, React.CSSProperties> = {
     gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", 
     gap: "24px" 
   },
-  loaderContainer: { 
-    display: "flex", flexDirection: "column", 
-    alignItems: "center", gap: "16px", padding: "120px 0" 
-  },
-  loadingText: { color: "#94a3b8", fontWeight: 500 },
   emptyState: { 
     textAlign: "center", padding: "80px 20px", 
     background: "#fcfcfd", borderRadius: "24px", 

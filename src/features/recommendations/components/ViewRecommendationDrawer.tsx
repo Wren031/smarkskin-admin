@@ -5,11 +5,9 @@ import {
   ShieldAlert, 
   Activity, 
   Package, 
-  ChevronRight,
   ClipboardList,
   Sparkles,
   Clock,
-  Info
 } from "lucide-react";
 
 interface Props {

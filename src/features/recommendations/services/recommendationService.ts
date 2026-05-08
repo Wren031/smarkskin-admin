@@ -71,7 +71,6 @@ export const recommendationService = {
           usage: rp.tbl_products.usage,
         })) || [],
 
-      // ✅ FIXED: map to lifestyleTips (NOT lifestyle_tips)
       lifestyleTips:
         rec.tbl_recommendation_lifestyle_tips?.map((lt: any) => ({
           id: lt.tbl_lifestyle_tips.id,

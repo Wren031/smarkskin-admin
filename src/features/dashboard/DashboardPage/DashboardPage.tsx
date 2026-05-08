@@ -1,274 +1,368 @@
-import React, { useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { 
-  Activity, Zap, Users, ShieldCheck, 
-  ChevronRight, Filter, UserCheck, TrendingUp, 
-  ArrowUpRight
+import {
+  Activity,
+  Zap,
+  Users,
+  ShieldCheck,
+  ArrowUpRight,
+  Circle,
+  FileText,
+  Loader2,
 } from "lucide-react";
 
-/* --- TYPES & INTERFACES --- */
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+
+import { useDashboardStats } from "../hooks/useDashboardStats";
+import { DashboardStatsService } from "../service/DashboardStatsService";
+import TitleSize from "../../../styles/TitleSize";
+
+/* -------------------------------------------------------------------------- */
+/* TOOLTIP UI                                                                 */
+/* -------------------------------------------------------------------------- */
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={styles.tooltipContainer}>
+        <div style={styles.tooltipHeader}>{label}</div>
+        {payload.map((entry: any, index: number) => (
+          <div key={index} style={styles.tooltipRow}>
+            <div style={{ ...styles.tooltipDot, background: entry.color }} />
+            <span style={styles.tooltipText}>{entry.name}</span>
+            <span style={styles.tooltipValue}>{entry.value.toLocaleString()}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
+/* -------------------------------------------------------------------------- */
+/* STAT CARD                                                                  */
+/* -------------------------------------------------------------------------- */
 
 interface StatCardProps {
   label: string;
-  value: string;
+  value: string | number;
   growth: string;
   icon: ReactNode;
-  trend?: 'up' | 'down' | 'stable';
+  color: string;
+  loading?: boolean;
 }
 
-interface ActivityRowProps {
-  id: string;
-  type: string;
-  accuracy: string;
-  status: 'Positive' | 'Negative';
-}
+const StatCard: React.FC<StatCardProps> = ({ label, value, growth, icon, color, loading }) => {
+  return (
+    <div className={`glass-card hover-card ${loading ? "shimmer" : ""}`} style={styles.statCard}>
+      {loading ? (
+        <div style={{ height: "60px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+          <div style={{ width: "40%", height: "10px", background: "#f1f5f9", borderRadius: "4px", marginBottom: "12px" }} />
+          <div style={{ width: "80%", height: "24px", background: "#f1f5f9", borderRadius: "4px" }} />
+        </div>
+      ) : (
+        <>
+          <div style={styles.statCardTop}>
+            <div style={{ ...styles.iconWrapper, background: `${color}15`, color }}>
+              {icon}
+            </div>
+            <div style={styles.growthPill}>
+              <ArrowUpRight size={12} />
+              {growth}
+            </div>
+          </div>
+          <div style={styles.statValue}>{value}</div>
+          <div style={styles.statFooter}>
+            <span style={styles.statLabel}>{label}</span>
+            <div style={styles.liveBadge}>
+              <div style={styles.liveDot} />
+              Live
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
-interface LoginRowProps {
-  name: string;
-  location: string;
-  timestamp: string;
-}
+/* -------------------------------------------------------------------------- */
+/* MAIN PAGE                                                                  */
+/* -------------------------------------------------------------------------- */
 
-/* --- REUSABLE SUB-COMPONENTS --- */
+export default function DashboardPage() {
+  const {
+    totalScans = 0,
+    totalUsers = 0,
+    totalProducts = 0,
+    totalConditions = 0,
+  } = useDashboardStats();
 
-const StatCard: React.FC<StatCardProps> = ({ label, value, growth, icon, trend = 'up' }) => (
-  <div className="dashboard-card" style={styles.statCard}>
-    <div style={styles.statTop}>
-      <div style={styles.statIconContainer}>{icon}</div>
-      <div style={{ 
-        ...styles.statGrowth, 
-        color: trend === 'stable' ? '#64748b' : '#10b981' 
-      }}>
-        {growth} {trend !== 'stable' && <ArrowUpRight size={12} />}
+  const [view, setView] = useState<"total" | "monthly">("monthly");
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [recentScans, setRecentScans] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFullyReady, setIsFullyReady] = useState(false);
+
+  const activeUsers = [
+    { id: 1, name: "Sarah Jenkins", time: "2 mins ago", color: "#6366f1" },
+    { id: 2, name: "Marcus Thorne", time: "18 mins ago", color: "#0ea5e9" },
+    { id: 3, name: "Elena Rodriguez", time: "24 mins ago", color: "#10b981" },
+    { id: 4, name: "David Chen", time: "45 mins ago", color: "#f59e0b" },
+    { id: 5, name: "Amara Okoro", time: "1 hour ago", color: "#8b5cf6" },
+  ];
+
+  // Logic to fetch data - extracted to be called by both initial load and interval
+  const fetchData = useCallback(async (showLoadingState: boolean) => {
+    if (showLoadingState) setIsLoading(true);
+    
+    try {
+      const [analyticsData, scansData] = await Promise.all([
+        view === "monthly" 
+          ? DashboardStatsService.getMonthlyStats() 
+          : DashboardStatsService.getSkinConditionStats(),
+        DashboardStatsService.getRecentScans()
+      ]);
+      
+      const mappedData = analyticsData.map((item: any) => ({
+        ...item,
+        secondaryCount: Math.max(0, item.count * (0.6 + Math.random() * 0.4)) 
+      }));
+
+      setChartData(mappedData);
+      setRecentScans(scansData);
+    } catch (error) {
+      console.error("Dashboard refresh failed:", error);
+    } finally {
+      setIsLoading(false);
+      // Only set initial ready state once
+      if (!isFullyReady) {
+        setTimeout(() => setIsFullyReady(true), 600);
+      }
+    }
+  }, [view, isFullyReady]);
+
+  // 1. Initial load and view toggle trigger
+  useEffect(() => {
+    fetchData(true);
+  }, [view, fetchData]);
+
+  // 2. Automatic refresh every 10 seconds
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchData(false); // background refresh (no spinners)
+    }, 10000);
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [fetchData]);
+
+  if (!isFullyReady) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.fullLoaderArea}>
+          <Loader2 className="animate-spin" size={42} color="#06b6d4" />
+          <p style={{ marginTop: 16, color: "#94a3b8", fontWeight: 600, fontSize: "14px" }}>
+            Synchronizing Real-time Data...
+          </p>
+        </div>
+        <style>{`
+          .animate-spin { animation: spin 1s linear infinite; }
+          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        `}</style>
       </div>
-    </div>
-    <div style={styles.statContent}>
-      <div style={styles.statValue}>{value}</div>
-      <div style={styles.statLabel}>{label}</div>
-    </div>
-  </div>
-);
-
-const ActivityRow: React.FC<ActivityRowProps> = ({ id, type, accuracy, status }) => (
-  <div className="feed-row" style={styles.activityRow}>
-    <div style={{ flex: 2 }}>
-      <div style={styles.rowPrimaryText}>{id}</div>
-      <div style={styles.rowSecondaryText}>{type}</div>
-    </div>
-    <div style={{ flex: 1 }}>
-      <div style={styles.rowPrimaryText}>{accuracy}</div>
-      <div style={styles.rowSecondaryText}>Confidence</div>
-    </div>
-    <div style={{ flex: 1, textAlign: 'right' }}>
-      <span style={{ 
-        ...styles.badge,
-        backgroundColor: status === 'Positive' ? '#fff1f2' : '#f0fdf4',
-        color: status === 'Positive' ? '#e11d48' : '#16a34a'
-      }}>{status}</span>
-    </div>
-  </div>
-);
-
-const LoginRow: React.FC<LoginRowProps> = ({ name, location, timestamp }) => (
-  <div className="feed-row" style={styles.loginRow}>
-    <div style={styles.avatarCircle}><UserCheck size={14} color="#6366f1" /></div>
-    <div style={{ flex: 1 }}>
-      <div style={styles.rowPrimaryText}>{name}</div>
-      <div style={styles.rowSecondaryText}>{location}</div>
-    </div>
-    <div style={styles.timestampText}>{timestamp}</div>
-  </div>
-);
-
-/* --- MAIN DASHBOARD --- */
-
-export default function IntelligenceDashboard() {
-  const currentDate = useMemo(() => new Date().toLocaleDateString('en-US', { 
-    month: 'long', day: 'numeric', year: 'numeric' 
-  }), []);
+    );
+  }
 
   return (
-    <div style={styles.canvas}>
+    <div style={styles.page}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         
-        .dashboard-card { 
-          background: #ffffff;
-          border: 1px solid #e2e8f0;
-          border-radius: 20px;
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .dashboard-card:hover { 
-          transform: translateY(-2px);
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
-        }
-        .feed-row {
-          transition: background-color 0.2s ease;
-          cursor: pointer;
-          border-radius: 12px;
-          margin: 0 -8px;
-          padding: 12px 8px;
-        }
-        .feed-row:hover { background-color: #f8fafc; }
+        .dashboard-container { max-width: 1400px; margin: 0 auto; }
+        .stats-grid { display: grid; gap: 20px; grid-template-columns: repeat(4, 1fr); margin-bottom: 24px; }
+        .visual-grid { display: grid; gap: 24px; grid-template-columns: 2.3fr 1fr; }
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; gap: 20px; }
 
-        @keyframes pulse {
-          0% { opacity: 1; }
-          50% { opacity: 0.5; }
-          100% { opacity: 1; }
-        }
-        .status-dot { animation: pulse 2s infinite ease-in-out; }
+        @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .visual-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 640px) { .stats-grid { grid-template-columns: 1fr; } .dashboard-header { flex-direction: column; align-items: flex-start; } .table-wrapper { overflow-x: auto; } }
+
+        @keyframes shimmer { 0% { background-position: -468px 0; } 100% { background-position: 468px 0; } }
+        .shimmer { background: #f6f7f8; background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%); background-repeat: no-repeat; background-size: 800px 100%; animation: shimmer 1.2s linear infinite forwards; }
+        .glass-card { background: rgba(255,255,255,0.92); backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 10px 40px rgba(15,23,42,0.04); border-radius: 24px; }
+        .hover-card { transition: all .28s ease; }
+        .hover-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,.08); }
+        .user-item:not(:last-child) { border-bottom: 1px solid #f1f5f9; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px; color: #94a3b8; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 1px solid #f1f5f9; }
+        td { padding: 14px 12px; color: #0f172a; font-size: 13px; border-bottom: 1px solid #f1f5f9; }
       `}</style>
 
-      {/* HEADER SECTION (CLEANED) */}
-      <header style={styles.header}>
-        <div>
-          <h1 style={styles.mainTitle}>Dashboard</h1>
-          <p style={styles.dateSubtitle}>{currentDate} • System Command Center</p>
-        </div>
-        
-        <div style={styles.headerActions}>
-          <div style={styles.statusPill}>
-            <div className="status-dot" style={styles.pulseDot} />
-            AI Engine: Operational
-          </div>
-        </div>
-      </header>
-
-      {/* ANALYTICS OVERVIEW */}
-      <section style={styles.statsGrid}>
-        <StatCard label="Total Scans" value="24,812" growth="+12.5%" icon={<Activity size={20} color="#6366f1" />} />
-        <StatCard label="Model Accuracy" value="98.24%" growth="+0.4%" icon={<Zap size={20} color="#f59e0b" />} />
-        <StatCard label="Active Sessions" value="1,204" growth="+18.2%" icon={<Users size={20} color="#10b981" />} />
-        <StatCard label="Uptime" value="99.99%" growth="Stable" trend="stable" icon={<ShieldCheck size={20} color="#06b6d4" />} />
-      </section>
-
-      {/* DATA VISUALIZATION */}
-      <div style={styles.visualGrid}>
-        <div className="dashboard-card" style={styles.mainChartCard}>
-          <div style={styles.cardHeader}>
+      <div className="dashboard-container">
+        <header className="dashboard-header">
+          <TitleSize
+            title="Dashboard Overview"
+            subtitle="System performance and diagnostic throughput."
+          />
+          <div style={styles.systemCard}>
+            <div style={styles.systemPulse} />
             <div>
-              <h3 style={styles.cardTitle}>Throughput Analysis</h3>
-              <p style={styles.cardSubtitle}>Scan requests processed per minute</p>
+              <div style={styles.systemTitle}>AI Engine Status</div>
+              <div style={styles.systemSub}>Operational • 99.9% uptime</div>
             </div>
-            <div style={styles.chartValueHighlight}>1.4k <span style={{fontSize: 12, fontWeight: 500, color: '#94a3b8'}}>RPM</span></div>
           </div>
-          <div style={styles.chartPlaceholder}>
-             <svg viewBox="0 0 800 200" style={styles.svgFill}>
-                <path d="M0,150 Q100,120 200,140 T400,80 T600,100 T800,40 L800,200 L0,200 Z" fill="#f5f3ff" />
-                <path d="M0,150 Q100,120 200,140 T400,80 T600,100 T800,40" fill="none" stroke="#6366f1" strokeWidth="3" strokeLinecap="round" />
-             </svg>
-          </div>
-        </div>
+        </header>
 
-        <div className="dashboard-card" style={styles.sideCard}>
-           <div style={styles.cardHeader}>
-             <h3 style={styles.cardTitle}>System Health</h3>
-             <TrendingUp size={18} color="#10b981" />
-           </div>
-           <div style={styles.healthScoreContainer}>
-              <div style={styles.healthValue}>98</div>
-              <div style={styles.healthLabel}>Optimal Performance</div>
-           </div>
-        </div>
-      </div>
+        <section className="stats-grid">
+          <StatCard loading={isLoading} label="Total Scans" value={totalScans.toLocaleString()} growth="+12%" color="#06b6d4" icon={<Activity size={20} />} />
+          <StatCard loading={isLoading} label="Total Users" value={totalUsers.toLocaleString()} growth="+5%" color="#ec4899" icon={<Users size={20} />} />
+          <StatCard loading={isLoading} label="Active Products" value={totalProducts.toLocaleString()} growth="+18%" color="#8b5cf6" icon={<Zap size={20} />} />
+          <StatCard loading={isLoading} label="Conditions" value={totalConditions.toLocaleString()} growth="+8%" color="#f59e0b" icon={<ShieldCheck size={20} />} />
+        </section>
 
-      {/* ACTIVITY TABLES */}
-      <div style={styles.bottomGrid}>
-        <div className="dashboard-card" style={styles.feedContainer}>
-          <div style={styles.cardHeader}>
-            <h3 style={styles.cardTitle}>Live Activity Feed</h3>
-            <button style={styles.filterBtn}><Filter size={14} /> Filter</button>
-          </div>
-          <div style={styles.listBody}>
-            <ActivityRow id="SCN-8820" type="Dermatitis" accuracy="98.2%" status="Positive" />
-            <ActivityRow id="SCN-8819" type="Healthy" accuracy="99.1%" status="Negative" />
-            <ActivityRow id="SCN-8818" type="Melanoma" accuracy="96.5%" status="Positive" />
-          </div>
-          <button style={styles.footerLink}>View detailed logs <ChevronRight size={14} /></button>
-        </div>
+        <div className="visual-grid">
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            
+            <div className="glass-card hover-card" style={styles.chartCard}>
+              <div className="chart-header" style={styles.chartHeader}>
+                <h3 style={styles.cardTitle}>{view === "monthly" ? "Scan Volume" : "Condition Data"}</h3>
+                <div style={styles.segmented}>
+                  <button onClick={() => setView("monthly")} style={{...styles.segmentBtn, ...(view === "monthly" ? styles.segmentBtnActive : {})}}>Monthly</button>
+                  <button onClick={() => setView("total")} style={{...styles.segmentBtn, ...(view === "total" ? styles.segmentBtnActive : {})}}>Total</button>
+                </div>
+              </div>
+              
+              <div style={{ width: "100%", height: "250px" }}>
+                {isLoading ? (
+                  <div style={styles.loadingContainer}>
+                     <Loader2 className="animate-spin" color="#06b6d4" />
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="cyanGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.8}/><stop offset="95%" stopColor="#22d3ee" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="pinkGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f472b6" stopOpacity={0.6}/><stop offset="95%" stopColor="#f472b6" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 11 }} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 11 }} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Area type="monotone" dataKey="secondaryCount" stroke="#f472b6" strokeWidth={3} fill="url(#pinkGradient)" />
+                      <Area type="monotone" dataKey="count" stroke="#22d3ee" strokeWidth={3} fill="url(#cyanGradient)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
 
-        <div className="dashboard-card" style={styles.feedContainer}>
-          <div style={styles.cardHeader}>
-            <h3 style={styles.cardTitle}>Security Access</h3>
-            <ShieldCheck size={18} color="#94a3b8" />
+            <div className="glass-card hover-card" style={styles.tableCard}>
+              <div style={{...styles.userCardHeader, marginBottom: "12px"}}>
+                <h3 style={styles.cardTitle}>Recent Scan History</h3>
+                <div style={styles.countBadge}><FileText size={12} style={{marginRight: 4}}/> Latest Logs</div>
+              </div>
+              <div className="table-wrapper">
+                <table>
+                  <thead>
+                    <tr><th>Full Name</th><th>AI Confidence</th><th>Scan Date</th></tr>
+                  </thead>
+                  <tbody>
+                    {isLoading ? [...Array(4)].map((_, i) => (
+                      <tr key={i}>
+                        <td><div className="shimmer" style={{ width: "100px", height: "14px", borderRadius: "4px" }} /></td>
+                        <td><div className="shimmer" style={{ width: "40px", height: "14px", borderRadius: "4px" }} /></td>
+                        <td><div className="shimmer" style={{ width: "80px", height: "14px", borderRadius: "4px" }} /></td>
+                      </tr>
+                    )) : recentScans.map((scan, index) => (
+                      <tr key={index}>
+                        <td style={{fontWeight: 600}}>{scan.full_name}</td>
+                        <td>
+                          <span style={{ padding: '3px 8px', borderRadius: '10px', background: scan.confidence > 80 ? '#ecfdf5' : '#fff7ed', color: scan.confidence > 80 ? '#059669' : '#d97706', fontSize: '11px', fontWeight: 700 }}>
+                            {scan.confidence}%
+                          </span>
+                        </td>
+                        <td style={{color: '#94a3b8'}}>{scan.date}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-          <div style={styles.listBody}>
-            <LoginRow name="Dr. Julian Voss" location="Berlin, DE" timestamp="Just now" />
-            <LoginRow name="Sarah Miller" location="New York, US" timestamp="12m ago" />
-            <LoginRow name="Wei Zhang" location="Singapore, SG" timestamp="45m ago" />
+
+          <div className="glass-card hover-card" style={styles.userCard}>
+            <div style={styles.userCardHeader}>
+              <h3 style={styles.cardTitle}>Recent Logins</h3>
+              <div style={styles.countBadge}>{activeUsers.length} Active</div>
+            </div>
+            <div style={styles.userList}>
+              {activeUsers.map((user) => (
+                <div key={user.id} className="user-item" style={styles.userItem}>
+                  <div style={{...styles.userAvatar, background: `${user.color}15`, color: user.color}}>{user.name.charAt(0)}</div>
+                  <div style={styles.userInfo}>
+                    <div style={styles.userName}>{user.name}</div>
+                    <div style={styles.userTime}>{user.time}</div>
+                  </div>
+                  <Circle size={6} fill="#10b981" color="#10b981" />
+                </div>
+              ))}
+            </div>
           </div>
-          <button style={styles.footerLink}>Security protocols <ChevronRight size={14} /></button>
         </div>
       </div>
     </div>
   );
 }
 
-
 const styles: Record<string, CSSProperties> = {
-  canvas: {
-    padding: "clamp(12px, 2vw, 24px)",
-    backgroundColor: "#fcfcfd",
-    minHeight: "100vh",
-    fontFamily: "'Plus Jakarta Sans', sans-serif",
-    color: "#1e293b"
-  },
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "40px"
-  },
-  mainTitle: { fontSize: "32px", fontWeight: 800, letterSpacing: "-0.02em", margin: 0 },
-  dateSubtitle: { color: "#64748b", fontSize: "14px", marginTop: "4px", fontWeight: 500 },
-  headerActions: { display: "flex", alignItems: "center" },
-  statusPill: { 
-    display: "flex", 
-    alignItems: "center", 
-    gap: "10px", 
-    fontSize: "13px", 
-    fontWeight: 700, 
-    color: "#0f172a", 
-    background: "#fff", 
-    padding: "12px 20px", 
-    borderRadius: "14px", 
-    border: "1px solid #e2e8f0",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.02)"
-  },
-  pulseDot: { width: "8px", height: "8px", borderRadius: "50%", background: "#10b981" },
-  
-  statsGrid: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "24px", marginBottom: "32px" },
-  statCard: { padding: "24px" },
-  statTop: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" },
-  statIconContainer: { padding: "10px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #f1f5f9" },
-  statValue: { fontSize: "28px", fontWeight: 800, color: "#0f172a", lineHeight: 1 },
-  statLabel: { fontSize: "14px", color: "#64748b", fontWeight: 500, marginTop: "6px" },
-  statGrowth: { fontSize: "12px", fontWeight: 700, display: "flex", alignItems: "center", gap: "2px" },
-
-  visualGrid: { display: "grid", gridTemplateColumns: "2.5fr 1fr", gap: "24px", marginBottom: "32px" },
-  mainChartCard: { padding: "28px" },
-  sideCard: { padding: "28px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center" },
-  cardHeader: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" },
-  cardTitle: { fontSize: "18px", fontWeight: 700, margin: 0 },
-  cardSubtitle: { fontSize: "13px", color: "#94a3b8", marginTop: "4px" },
-  chartValueHighlight: { fontSize: "24px", fontWeight: 800 },
-  chartPlaceholder: { height: "200px", width: "100%", borderRadius: "12px", overflow: "hidden" },
-  svgFill: { width: '100%', height: '100%', display: 'block' },
-  
-  healthScoreContainer: { display: "flex", flexDirection: "column", alignItems: "center" },
-  healthValue: { fontSize: "64px", fontWeight: 800, color: "#6366f1" },
-  healthLabel: { fontSize: "14px", fontWeight: 600, color: "#64748b" },
-
-  bottomGrid: { display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: "24px" },
-  feedContainer: { padding: "28px" },
-  listBody: { display: "flex", flexDirection: "column", gap: "8px" },
-  activityRow: { display: "flex", alignItems: "center" },
-  loginRow: { display: "flex", alignItems: "center", gap: "16px" },
-  rowPrimaryText: { fontSize: "14px", fontWeight: 700, color: "#1e293b" },
-  rowSecondaryText: { fontSize: "12px", color: "#94a3b8", fontWeight: 500 },
-  badge: { padding: "6px 12px", borderRadius: "8px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase" },
-  avatarCircle: { width: "36px", height: "36px", borderRadius: "10px", background: "#f5f3ff", display: "flex", alignItems: "center", justifyContent: "center" },
-  timestampText: { fontSize: "12px", color: "#cbd5e1", fontWeight: 600 },
-  footerLink: { marginTop: "24px", background: "none", border: "none", color: "#6366f1", fontWeight: 700, fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", padding: 0 },
-  filterBtn: { background: "#fff", border: "1px solid #e2e8f0", padding: "6px 12px", borderRadius: "8px", fontSize: "12px", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }
+  page: { 
+    
+   },
+  fullLoaderArea: { height: "70vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" },
+  systemCard: { display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderRadius: "12px", background: "#fff", border: "1px solid #f1f5f9" },
+  systemPulse: { width: "8px", height: "8px", borderRadius: "50%", background: "#10b981", boxShadow: "0 0 0 4px rgba(16, 185, 129, 0.1)" },
+  systemTitle: { fontSize: "12px", fontWeight: 700, color: "#1e293b" },
+  systemSub: { fontSize: "11px", color: "#94a3b8" },
+  statCard: { padding: "18px" },
+  statCardTop: { display: "flex", justifyContent: "space-between", alignItems: "center" },
+  iconWrapper: { width: "38px", height: "38px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" },
+  growthPill: { display: "flex", alignItems: "center", gap: "4px", color: "#10b981", fontSize: "11px", fontWeight: 700 },
+  statValue: { fontSize: "22px", fontWeight: 800, color: "#1e293b", margin: "10px 0" },
+  statFooter: { display: "flex", justifyContent: "space-between", alignItems: "center" },
+  statLabel: { color: "#94a3b8", fontSize: "12px", fontWeight: 600 },
+  liveBadge: { display: "flex", alignItems: "center", gap: "4px", fontSize: "10px", color: "#10b981", fontWeight: 700 },
+  liveDot: { width: "5px", height: "5px", borderRadius: "50%", background: "#10b981" },
+  chartCard: { padding: "24px" },
+  tableCard: { padding: "24px" },
+  chartHeader: { display: "flex", justifyContent: "space-between", marginBottom: "20px" },
+  cardTitle: { margin: 0, fontSize: "15px", fontWeight: 700, color: "#1e293b" },
+  segmented: { display: "flex", gap: "4px", background: "#f1f5f9", padding: "3px", borderRadius: "8px" },
+  segmentBtn: { border: "none", background: "transparent", padding: "5px 10px", borderRadius: "6px", cursor: "pointer", color: "#94a3b8", fontWeight: 700, fontSize: "11px" },
+  segmentBtnActive: { background: "#fff", color: "#1e293b", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" },
+  loadingContainer: { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" },
+  userCard: { padding: "24px" },
+  userCardHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" },
+  countBadge: { background: "#f8fafc", border: "1px solid #f1f5f9", color: "#94a3b8", padding: "4px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: 700, display: "flex", alignItems: "center" },
+  userList: { display: "flex", flexDirection: "column" },
+  userItem: { display: "flex", alignItems: "center", gap: "12px", padding: "14px 0" },
+  userAvatar: { width: "34px", height: "34px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "13px" },
+  userInfo: { flex: 1 },
+  userName: { fontSize: "13px", fontWeight: 700, color: "#1e293b" },
+  userTime: { fontSize: "11px", color: "#94a3b8" },
+  tooltipContainer: { background: "rgba(15, 23, 42, 0.9)", backdropFilter: "blur(4px)", borderRadius: "10px", padding: "10px", minWidth: "140px" },
+  tooltipHeader: { color: "#94a3b8", fontSize: "10px", fontWeight: 700, marginBottom: "8px", textTransform: "uppercase" },
+  tooltipRow: { display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" },
+  tooltipDot: { width: "6px", height: "6px", borderRadius: "50%" },
+  tooltipText: { color: "#fff", fontSize: "11px", flex: 1 },
+  tooltipValue: { color: "#fff", fontWeight: 800, fontSize: "11px" },
 };

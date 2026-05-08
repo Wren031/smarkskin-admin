@@ -212,7 +212,7 @@ const cardStyles: Record<string, CSSProperties> = {
     background: "#ffffff",
     borderRadius: "20px",
     padding: "24px",
-    border: "1px solid #f1f5f9",
+    border: "1px solid  #f1f5f9",
     display: "flex",
     flexDirection: "column",
     gap: "18px",

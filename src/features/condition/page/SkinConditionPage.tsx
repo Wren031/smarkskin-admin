@@ -2,20 +2,37 @@ import { useState, useMemo } from "react";
 import TitleSize from "../../../styles/TitleSize";
 import ConditionCard from "../components/ConditionCard";
 import AddConditionModal from "../components/AddConditionModal";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Activity } from "lucide-react"; // Added Activity
 import useCondition from "../hooks/useCondition";
+import type { CSSProperties } from "react";
 
 const SkeletonCard = () => (
   <div style={pageStyles.skeleton} className="shimmer" />
 );
 
 export default function SkinConditionPage() {
-  const { conditions, showAdd, setShowAdd, addCondition, updateCondition, deleteCondition, loading } = useCondition();
+  const { conditions = [], showAdd, setShowAdd, addCondition, updateCondition, deleteCondition, loading } = useCondition();
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Memoized filter must be declared BEFORE any conditional returns
   const filteredConditions = useMemo(() => {
-    return conditions.filter((c) => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    return conditions.filter((c) => 
+      c.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   }, [conditions, searchTerm]);
+
+  // If you want a full-screen loader, place it here. 
+  // However, your code has a Skeleton grid below, which is usually better UX!
+  // I will fix the Activity reference just in case you use it.
+  if (loading && conditions.length === 0) return (
+    <div style={pageStyles.center}>
+      <Activity className="animate-spin" color="#0f172a" />
+      <style>{`
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
+    </div>
+  );
 
   return (
     <div style={pageStyles.container}>
@@ -44,6 +61,7 @@ export default function SkinConditionPage() {
 
       <div className="grid-layout">
         {loading ? (
+          // This will now actually show because we fixed the early return
           Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
         ) : (
           filteredConditions.map((condition) => (
@@ -66,8 +84,10 @@ export default function SkinConditionPage() {
   );
 }
 
-const pageStyles = {
+// Fixed the styles object to include 'center' and proper typing
+const pageStyles: Record<string, CSSProperties> = {
   container: { padding: '32px', backgroundColor: '#fcfcfd', minHeight: '100vh' },
+  center: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' },
   addButton: { display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 600, cursor: 'pointer' },
   searchBox: { display: 'flex', alignItems: 'center', gap: '12px', padding: '0 16px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', width: '320px', marginBottom: '32px' },

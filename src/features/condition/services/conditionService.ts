@@ -13,7 +13,6 @@ export const conditionService = {
       console.error(error);
       return [];
     }
-
     return data;
   },
 

@@ -32,9 +32,17 @@ export default function DashboardLayout() {
 
   const userData = { name: "Admin", phone: "+998 (99) 436-46-15" };
 
+  // Logic to handle closing the sidebar from the Sidebar component
+  const handleAutoClose = (val: boolean) => {
+    if (isDesktop) {
+      setCollapsed(val);
+    } else {
+      setMobileOpen(!val); // If val is true (collapsed), mobileOpen should be false
+    }
+  };
+
   return (
     <div style={layoutStyles.container}>
-      {/* Global Transition Styles */}
       <style>{`
         * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 6px; }
@@ -47,7 +55,6 @@ export default function DashboardLayout() {
         }
       `}</style>
       
-      {/* Sidebar Logic */}
       {isDesktop ? (
         <div style={{ 
           width: collapsed ? "80px" : "280px", 
@@ -56,13 +63,13 @@ export default function DashboardLayout() {
         }}>
           <Sidebar
             collapsed={collapsed}
+            setCollapsed={handleAutoClose} // Fixed: Pass the handler
             user={userData}
-            onLogout={handleLogout}
+            onLogout={handleLogout} 
           />
         </div>
       ) : (
         <>
-          {/* Mobile Overlay */}
           <div
             onClick={() => setMobileOpen(false)}
             style={{
@@ -79,6 +86,7 @@ export default function DashboardLayout() {
           >
             <Sidebar
               collapsed={false} 
+              setCollapsed={(val) => setMobileOpen(!val)} // Fixed: Mobile logic
               user={userData}
               onLogout={handleLogout}
             />
@@ -86,13 +94,11 @@ export default function DashboardLayout() {
         </>
       )}
 
-      {/* Main Content Area */}
       <div style={layoutStyles.mainArea}>
         <TopHeader
           isDesktop={isDesktop}
           setMobileOpen={setMobileOpen}
           userName={userData.name}
-          // Optional: Pass toggle for desktop sidebar if TopHeader has a burger icon
           onToggleSidebar={() => setCollapsed(!collapsed)} 
         />
 
@@ -111,14 +117,14 @@ const layoutStyles: Record<string, CSSProperties> = {
     display: "flex", 
     height: "100vh", 
     overflow: "hidden", 
-    backgroundColor: "#ffffff", // Pure white for a high-end feel
+    backgroundColor: "#ffffff", 
     fontFamily: "'Inter', system-ui, sans-serif" 
   },
   overlay: {
     position: "fixed",
     inset: 0,
     backgroundColor: "rgba(15, 23, 42, 0.15)",
-    backdropFilter: "blur(8px)", // Modern 2026 glass effect
+    backdropFilter: "blur(8px)", 
     zIndex: 40,
     transition: "all 0.4s ease",
   },
@@ -142,11 +148,11 @@ const layoutStyles: Record<string, CSSProperties> = {
     flex: 1, 
     overflowY: "auto", 
     overflowX: "hidden",
-    backgroundColor: "#fff" // Changed to pure white to match your modern card aesthetic
+    backgroundColor: "#fff" 
   },
   contentContainer: { 
     margin: "0 auto", 
-    // padding: "clamp(16px, 3vw, 40px)", // Responsive padding
-    // maxWidth: "1600px" // Prevents the content from getting too wide on ultra-wide monitors
+    padding: "clamp(16px, 3vw, 40px)", 
+    maxWidth: "1600px" 
   }
 };

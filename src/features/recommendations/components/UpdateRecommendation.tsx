@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { X, Edit3, Save, Package, ChevronDown, Loader2, Lightbulb } from "lucide-react";
+import { X, Edit3, Save, ChevronDown, Loader2, Lightbulb } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 
 // Types

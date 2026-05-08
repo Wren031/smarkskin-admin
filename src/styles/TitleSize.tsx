@@ -14,7 +14,7 @@ export default function TitleSize({ title = "Title", subtitle = "Subtitle"}) {
 const styles = {
     title: {
     fontSize: 28,
-    fontWeight: 800,
+    fontWeight: 900,
     marginBottom: 1,
     letterSpacing: -0.2,
   },

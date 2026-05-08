@@ -1,10 +1,26 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ShieldCheck, ArrowRight, Sparkles, Lock,
-  Smartphone, Mail, Phone, Database,
-  Search, FileText, Users, Monitor,
-  ScanFace, Activity, CheckCircle2, ChevronRight
+  ShieldCheck,
+  ArrowRight,
+  Sparkles,
+  Lock,
+  Smartphone,
+  Mail,
+  Phone,
+  Database,
+  Search,
+  FileText,
+  Monitor,
+  ScanFace,
+  Activity,
+  CheckCircle2,
+  ChevronRight,
+  Menu,
+  X,
+  Download,
+  Apple,
+  Star,
 } from "lucide-react";
 
 import captureMockup from "../../../assets/images/settings.jpg";
@@ -24,19 +40,19 @@ const WORKFLOW = [
     icon: <Activity size={22} />,
     step: "02",
     t: "Health Analysis",
-    d: "AI-driven assessment of hydration, elasticity, and dermal biomarkers across 47 distinct indicators.",
+    d: "AI-driven assessment of hydration, elasticity, and dermal biomarkers.",
   },
   {
     icon: <Search size={22} />,
     step: "03",
     t: "Clinical Matching",
-    d: "Neural networks cross-reference results with a global dermatology dataset of 3.2M clinical cases.",
+    d: "Cross-reference results with dermatology datasets and clinical models.",
   },
   {
     icon: <FileText size={22} />,
     step: "04",
     t: "Expert Guidance",
-    d: "Instant generation of structured dermatological reports with evidence-backed recommendations.",
+    d: "Instant dermatological reports with evidence-backed recommendations.",
   },
 ];
 
@@ -44,22 +60,22 @@ const FEATURES = [
   {
     icon: <Monitor size={20} />,
     title: "Real-time Monitoring",
-    desc: "Track skin health progress longitudinally with AR overlays and trend analysis.",
+    desc: "Track skin health progress longitudinally with precision biomarker trending.",
   },
   {
     icon: <Lock size={20} />,
     title: "Data Privacy",
-    desc: "AES-256 encryption at rest and in transit. Biometric data never leaves your infrastructure.",
+    desc: "AES-256 encryption across all endpoints with zero-knowledge architecture.",
   },
   {
     icon: <Database size={20} />,
     title: "EHR Integration",
-    desc: "FHIR-compliant sync with Epic, Cerner, and 40+ electronic health record systems.",
+    desc: "FHIR-compliant sync with major healthcare platforms and clinical systems.",
   },
   {
     icon: <Smartphone size={20} />,
-    title: "Cross-Platform",
-    desc: "Native-feel experience across iOS, Android, and Web — shared codebase, zero compromise.",
+    title: "Cross Platform",
+    desc: "Optimized natively for iOS, Android, desktop, and progressive web.",
   },
 ];
 
@@ -70,22 +86,57 @@ const STATS = [
   { value: "HIPAA", label: "Certified compliant" },
 ];
 
+const C = {
+  sky: "#0ea5e9",
+  teal: "#0d9488",
+  navy: "#0a1628",
+  navyMid: "#112240",
+  slate: "#64748b",
+  slateLight: "#94a3b8",
+  border: "#e2e8f0",
+  borderDark: "#1e3a5f",
+lt: "#f8fafc",
+  bgDark: "#060d1a",
+  white: "#ffffff",
+  accent: "#38bdf8",
+  gold: "#f59e0b",
+};
+
 export default function LandingPage() {
   const navigate = useNavigate();
+
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeNav, setActiveNav] = useState("Home");
+  const [mobileMenu, setMobileMenu] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+
+  const [screen, setScreen] = useState({
+    mobile: window.innerWidth < 768,
+    tablet: window.innerWidth >= 768 && window.innerWidth < 1024,
+  });
+
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 40);
+    const handleResize = () => {
+      setScreen({
+        mobile: window.innerWidth < 768,
+        tablet: window.innerWidth >= 768 && window.innerWidth < 1024,
+      });
     };
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const scrollTo = useCallback((label: string) => {
     setActiveNav(label);
+    setMobileMenu(false);
     const target = sectionRefs.current[label];
     if (target) {
       window.scrollTo({
@@ -95,604 +146,831 @@ export default function LandingPage() {
     }
   }, []);
 
+  const containerPadding = screen.mobile ? "0 20px" : screen.tablet ? "0 30px" : "0 48px";
+
   return (
     <div style={s.root}>
+      {/* DOWNLOAD MODAL */}
+      {showDownloadModal && (
+        <div style={s.modalOverlay} onClick={() => setShowDownloadModal(false)}>
+          <div style={s.modal} onClick={(e) => e.stopPropagation()}>
+            <button style={s.modalClose} onClick={() => setShowDownloadModal(false)}>
+              <X size={18} />
+            </button>
+            <div style={s.modalLogo}>
+              <div style={s.logoMark}>
+                <ShieldCheck size={18} color="#fff" />
+              </div>
+              <span style={{ ...s.logoText, fontSize: "20px" }}>
+                Derma<span style={{ color: C.sky }}>AI</span>
+              </span>
+            </div>
+            <h3 style={s.modalTitle}>Download the App</h3>
+            <p style={s.modalSub}>Clinical-grade skin analysis in your pocket. Free to download.</p>
+            <div style={s.modalRating}>
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} size={14} fill={C.gold} color={C.gold} />
+              ))}
+              <span style={{ color: C.slate, fontSize: "13px", marginLeft: "6px" }}>
+                4.9 · 12,400 reviews
+              </span>
+            </div>
+            <div style={s.modalBtns}>
+              <a href="#" style={s.storeBtn}>
+                <Apple size={20} />
+                <div>
+                  <span style={s.storeBtnSub}>Download on the</span>
+                  <span style={s.storeBtnMain}>App Store</span>
+                </div>
+              </a>
+              <a href="#" style={{ ...s.storeBtn, background: "#1a1a2e" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                  <path d="M3.18 23.76c.3.17.64.24.98.2l.14-.08L15.34 12 4.3.12l-.14-.08a1.42 1.42 0 0 0-.98.2C2.8.62 2.6 1.2 2.6 1.8v20.4c0 .6.2 1.18.58 1.56z" />
+                  <path d="M19.4 9.4 16.8 7.9 13.56 12l3.24 4.1 2.6-1.5a2.04 2.04 0 0 0 0-3.52 2.04 2.04 0 0 0-.3-.2c.1.04.2.06.3.1z" />
+                  <path d="M4.3.12 15.56 11.3l1.24-1.4L5.56.12A2.16 2.16 0 0 0 4.3.12z" />
+                  <path d="M4.3 23.88l1.26-.08 11.24-9.78-1.24-1.4L4.3 23.88z" />
+                </svg>
+                <div>
+                  <span style={s.storeBtnSub}>Get it on</span>
+                  <span style={s.storeBtnMain}>Google Play</span>
+                </div>
+              </a>
+            </div>
+            <p style={s.modalNote}>
+              <ShieldCheck size={12} color={C.sky} /> HIPAA Compliant · SOC 2 · FDA Registered
+            </p>
+          </div>
+        </div>
+      )}
 
-      {/* ── Navigation ── */}
-      <nav style={{
-        ...s.nav,
-        background: isScrolled ? "rgba(255,255,255,0.97)" : "transparent",
-        borderBottom: isScrolled ? "1px solid #e8edf2" : "1px solid transparent",
-        backdropFilter: isScrolled ? "blur(20px)" : "none",
-        boxShadow: isScrolled ? "0 1px 0 rgba(0,0,0,0.04)" : "none",
-      }}>
-        <div style={s.navInner}>
+      {/* NAVBAR */}
+      <nav
+        style={{
+          ...s.nav,
+          background: isScrolled ? "rgba(255,255,255,0.97)" : "transparent",
+          borderBottom: isScrolled ? `1px solid ${C.border}` : "1px solid transparent",
+          backdropFilter: isScrolled ? "blur(24px)" : "none",
+        }}
+      >
+        <div style={{ ...s.navInner, padding: containerPadding }}>
           <div style={s.navLogo}>
             <div style={s.logoMark}>
-              <ShieldCheck size={16} strokeWidth={2.5} color="#fff" />
+              <ShieldCheck size={16} color="#fff" />
             </div>
             <span style={s.logoText}>
-              Derma<span style={{ color: "#0ea5e9" }}>AI</span>
+              Derma<span style={{ color: C.sky }}>AI</span>
             </span>
           </div>
 
-          <div style={s.navLinks}>
-            {NAV_ITEMS.map((label) => (
-              <button
-                key={label}
-                onClick={() => scrollTo(label)}
-                style={{
-                  ...s.navLink,
-                  color: activeNav === label ? "#0f172a" : "#64748b",
-                  fontWeight: activeNav === label ? 600 : 500,
-                }}
-              >
-                {label}
+          {!screen.mobile && (
+            <div style={s.navLinks}>
+              {NAV_ITEMS.map((label) => (
+                <button
+                  key={label}
+                  onClick={() => scrollTo(label)}
+                  style={{
+                    ...s.navLink,
+                    color: activeNav === label ? C.navy : C.slate,
+                    borderBottom: activeNav === label ? `2px solid ${C.sky}` : "2px solid transparent",
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!screen.mobile ? (
+            <div style={s.navActions}>
+              <button style={s.navSignIn} onClick={() => navigate("/login")}>
+                Sign in
+              </button>
+              <button style={s.navCta} onClick={() => setShowDownloadModal(true)}>
+                <Download size={14} />
+                Download App
+              </button>
+            </div>
+          ) : (
+            <button style={s.menuBtn} onClick={() => setMobileMenu(!mobileMenu)}>
+              {mobileMenu ? <X color={C.navy} /> : <Menu color={C.navy} />}
+            </button>
+          )}
+        </div>
+
+        {screen.mobile && mobileMenu && (
+          <div style={s.mobileMenu}>
+            {NAV_ITEMS.map((item) => (
+              <button key={item} onClick={() => scrollTo(item)} style={s.mobileMenuItem}>
+                {item}
               </button>
             ))}
-          </div>
-
-          <div style={s.navActions}>
-            <button style={s.navSignIn} onClick={() => navigate("/login")}>
-              Sign in
-            </button>
-            <button style={s.navCta} onClick={() => navigate("/login")}>
-              Get started <ArrowRight size={14} strokeWidth={2.5} />
+            <button style={{ ...s.navCta, width: "100%", justifyContent: "center" }} onClick={() => setShowDownloadModal(true)}>
+              <Download size={14} />
+              Download App
             </button>
           </div>
-        </div>
+        )}
       </nav>
 
-      {/* ── Hero ── */}
+      {/* HERO — dark luxury */}
       <header
-        ref={(el) => (sectionRefs.current["Home"] = el)}
+        ref={(el: HTMLElement | null) => { sectionRefs.current["Home"] = el; }}
         style={s.hero}
       >
-        {/* Background grid */}
-        <div style={s.heroGrid} aria-hidden="true" />
-        <div style={s.heroGlow} aria-hidden="true" />
+        <div style={s.heroNoise} />
+        <div style={s.heroGlow1} />
+        <div style={s.heroGlow2} />
+        <div style={s.heroGrid} />
 
-        <div style={s.heroInner}>
-          <div style={s.heroLeft}>
+        <div
+          style={{
+            ...s.heroInner,
+            flexDirection: screen.mobile ? "column" : "row",
+            padding: screen.mobile ? "80px 20px 60px" : "120px 48px 80px",
+            gap: screen.mobile ? "40px" : "80px",
+          }}
+        >
+          <div style={{ ...s.heroLeft, textAlign: screen.mobile ? "center" : "left" }}>
             <div style={s.heroBadge}>
-              <Sparkles size={12} strokeWidth={2} />
-              <span>Clinical-grade AI · Now in public beta</span>
+              <Sparkles size={11} color={C.sky} />
+              <span>Clinical-grade AI · Public Beta</span>
             </div>
 
             <h1 style={s.heroH1}>
-              Facial health intelligence,{" "}
+              Facial health
+              <br />
+              intelligence,
+              <br />
               <span style={s.heroAccent}>clinically validated</span>
             </h1>
 
             <p style={s.heroBody}>
-              DermaAI bridges advanced computer vision and dermatological science 
-              to deliver instant, actionable skin health insights from any device — 
-              no specialist appointment required.
+              DermaAI bridges advanced computer vision and dermatological science to deliver instant skin health insights from any device.
             </p>
 
-            <div style={s.heroCtas}>
-              <button style={s.heroPrimary} onClick={() => navigate("/login")}>
-                Start free assessment
-                <ArrowRight size={16} strokeWidth={2.5} />
+            <div style={{ ...s.heroCtas, justifyContent: screen.mobile ? "center" : "flex-start" }}>
+              <button style={s.heroPrimary} onClick={() => setShowDownloadModal(true)}>
+                <Download size={16} />
+                Download Free App
               </button>
               <button style={s.heroSecondary} onClick={() => scrollTo("Workflow")}>
                 See how it works
-                <ChevronRight size={16} strokeWidth={2} />
+                <ChevronRight size={16} />
               </button>
             </div>
 
-            <div style={s.heroTrust}>
-              {["SOC 2 Type II", "HIPAA Compliant", "FDA Registered"].map((t) => (
-                <div key={t} style={s.trustPill}>
-                  <CheckCircle2 size={12} color="#16a34a" strokeWidth={2.5} />
-                  <span>{t}</span>
+            <div style={{ ...s.heroTrust, justifyContent: screen.mobile ? "center" : "flex-start" }}>
+              {["SOC 2 Certified", "HIPAA Compliant", "FDA Registered"].map((item) => (
+                <div key={item} style={s.trustPill}>
+                  <CheckCircle2 size={12} color="#22c55e" />
+                  <span>{item}</span>
                 </div>
               ))}
             </div>
           </div>
 
           <div style={s.heroRight}>
-            <div style={s.mockupFrame}>
+            <div
+              style={{
+                ...s.mockupFrame,
+                width: screen.mobile ? "220px" : "300px",
+                height: screen.mobile ? "420px" : "580px",
+              }}
+            >
               <div style={{ ...s.mockupCard, ...s.mockupBack }}>
-                <img src={reportMockup} alt="Report screen" style={s.mockupImg} />
+                <img src={reportMockup} alt="" style={s.mockupImg} />
               </div>
               <div style={{ ...s.mockupCard, ...s.mockupMid }}>
-                <img src={captureMockup} alt="Capture screen" style={s.mockupImg} />
+                <img src={captureMockup} alt="" style={s.mockupImg} />
               </div>
               <div style={{ ...s.mockupCard, ...s.mockupFront }}>
-                <img src={analysisMockup} alt="Analysis screen" style={s.mockupImg} />
+                <img src={analysisMockup} alt="" style={s.mockupImg} />
                 <div style={s.mockupBadge}>
                   <div style={s.mockupBadgeDot} />
-                  Live analysis
+                  Live Analysis
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Stats bar */}
-        <div style={s.statsBar}>
+        {/* STATS */}
+        <div style={{ ...s.statsBar, padding: containerPadding }}>
           {STATS.map((stat, i) => (
             <React.Fragment key={stat.label}>
-              <div style={s.statCell}>
+              <div style={{ ...s.statCell, width: screen.mobile ? "50%" : "auto" }}>
                 <span style={s.statValue}>{stat.value}</span>
                 <span style={s.statLabel}>{stat.label}</span>
               </div>
-              {i < STATS.length - 1 && <div style={s.statDivider} />}
+              {i < STATS.length - 1 && !screen.mobile && <div style={s.statDivider} />}
             </React.Fragment>
           ))}
         </div>
       </header>
 
-      {/* ── Workflow ── */}
+      {/* WORKFLOW */}
       <section
-        ref={(el) => (sectionRefs.current["Workflow"] = el)}
+        ref={(el: HTMLElement | null) => { sectionRefs.current["Workflow"] = el; }}
         style={s.section}
       >
-        <div style={s.container}>
+        <div style={{ ...s.container, padding: containerPadding }}>
           <div style={s.sectionHeader}>
             <p style={s.eyebrow}>How it works</p>
             <h2 style={s.sectionTitle}>Four steps to clinical clarity</h2>
-            <p style={s.sectionSubtitle}>
-              From a single selfie to a fully structured dermatological report — 
-              the entire pipeline runs in under two seconds.
+            <p style={s.sectionSub}>
+              From a simple scan to a comprehensive dermatological report — all in under two seconds.
             </p>
           </div>
 
-          <div style={s.workflowGrid}>
+          <div
+            style={{
+              ...s.workflowGrid,
+              gridTemplateColumns: screen.mobile ? "1fr" : screen.tablet ? "repeat(2,1fr)" : "repeat(4,1fr)",
+            }}
+          >
             {WORKFLOW.map((item, i) => (
               <div key={i} style={s.workflowCard}>
                 <div style={s.workflowTop}>
                   <div style={s.workflowIconWrap}>{item.icon}</div>
                   <span style={s.workflowStep}>{item.step}</span>
                 </div>
+                <div style={s.workflowConnector} />
                 <h3 style={s.workflowTitle}>{item.t}</h3>
                 <p style={s.workflowDesc}>{item.d}</p>
-                {i < WORKFLOW.length - 1 && (
-                  <div style={s.workflowArrow}>
-                    <ArrowRight size={14} color="#94a3b8" />
-                  </div>
-                )}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── About ── */}
+      {/* ABOUT */}
       <section
-        ref={(el) => (sectionRefs.current["About"] = el)}
-        style={s.sectionAlt}
+        ref={(el: HTMLElement | null) => { sectionRefs.current["About"] = el; }}
+        style={s.sectionDark}
       >
-        <div style={s.container}>
-          <div style={s.splitLayout}>
-            <div style={s.splitText}>
-              <p style={s.eyebrow}>Our mission</p>
-              <h2 style={s.sectionTitle}>
-                Making specialist-grade care accessible to everyone
+        <div style={s.sectionDarkGlow} />
+        <div style={{ ...s.container, padding: containerPadding, position: "relative" }}>
+          <div style={{ ...s.aboutLayout, flexDirection: screen.mobile ? "column" : "row" }}>
+            <div style={s.aboutLeft}>
+              <p style={s.eyebrowLight}>About us</p>
+              <h2 style={{ ...s.sectionTitle, color: C.navy }}>
+                Making specialist-grade care accessible through AI
               </h2>
-              <p style={s.bodyText}>
-                Over 3 billion people lack access to a dermatologist. DermaAI was built 
-                to close that gap — combining clinical research, computer vision, and 
-                regulatory-grade infrastructure to deliver insights that were previously 
-                only available in a specialist's office.
+              <p style={{ ...s.aboutText, color: C.slate }}>
+                DermaAI combines artificial intelligence, clinical dermatology, and computer vision to deliver fast and accessible skin assessments — available to anyone with a smartphone.
               </p>
-              <p style={s.bodyText}>
-                Every recommendation is cross-referenced against peer-reviewed literature 
-                and reviewed by our clinical advisory board before deployment.
+              <p style={{ ...s.aboutText, color: C.slate }}>
+                We aim to bridge the gap between healthcare access and modern technology, empowering patients and practitioners alike.
               </p>
-              <div style={s.checkList}>
+              <div style={s.aboutChecklist}>
                 {[
-                  "99.2% concordance with board-certified dermatologists",
-                  "HIPAA-compliant infrastructure, zero data sold",
-                  "Available in 34 languages across 80+ countries",
-                ].map((t) => (
-                  <div key={t} style={s.checkItem}>
-                    <CheckCircle2 size={16} color="#0ea5e9" strokeWidth={2.5} />
-                    <span>{t}</span>
+                  "Clinical-grade AI assessment engine",
+                  "Secure HIPAA-compliant infrastructure",
+                  "Real-time analysis under 2 seconds",
+                  "Trusted by 3.2M+ clinical cases",
+                ].map((item) => (
+                  <div key={item} style={s.aboutCheckItem}>
+                    <CheckCircle2 size={15} color={C.sky} />
+                    <span style={{ color: C.navy, fontWeight: 500 }}>{item}</span>
                   </div>
+                ))}
+              </div>
+              <button style={{ ...s.heroPrimary, marginTop: "32px" }} onClick={() => setShowDownloadModal(true)}>
+                <Download size={15} />
+                Download the App
+              </button>
+            </div>
+
+            <div style={s.aboutRight}>
+              <img
+                src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1200&q=80"
+                alt="Medical professional"
+                style={s.aboutImage}
+              />
+              <div style={s.aboutCard}>
+                <div style={s.aboutCardTop}>
+                  <div style={s.aboutCardDot} />
+                  <span style={{ color: "#16a34a", fontWeight: 600, fontSize: "13px" }}>System Active</span>
+                </div>
+                <h3 style={s.aboutCardTitle}>99.2% Accuracy</h3>
+                <p style={{ ...s.aboutCardText, color: C.slate }}>AI-powered dermatological intelligence</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURES */}
+      <section
+        ref={(el: HTMLElement | null) => { sectionRefs.current["Features"] = el; }}
+        style={s.section}
+      >
+        <div style={{ ...s.container, padding: containerPadding }}>
+          <div style={s.sectionHeader}>
+            <p style={s.eyebrow}>Features</p>
+            <h2 style={s.sectionTitle}>Built for modern healthcare</h2>
+            <p style={s.sectionSub}>
+              Enterprise-grade infrastructure meeting the highest clinical and regulatory standards.
+            </p>
+          </div>
+
+          <div
+            style={{
+              ...s.featuresGrid,
+              gridTemplateColumns: screen.mobile ? "1fr" : screen.tablet ? "repeat(2,1fr)" : "repeat(4,1fr)",
+            }}
+          >
+            {FEATURES.map((feature, i) => (
+              <div key={i} style={s.featureCard}>
+                <div style={s.featureIconWrap}>{feature.icon}</div>
+                <h3 style={s.featureTitle}>{feature.title}</h3>
+                <p style={s.featureDesc}>{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* App Download CTA Banner */}
+          <div style={s.ctaBanner}>
+            <div style={s.ctaBannerGlow} />
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <p style={s.ctaBannerEye}>Ready to get started?</p>
+              <h3 style={s.ctaBannerTitle}>Download DermaAI — Free</h3>
+              <p style={s.ctaBannerSub}>
+                Available on iOS and Android. No subscription required for your first assessment.
+              </p>
+              <div style={s.ctaBannerBtns}>
+                <button style={s.ctaStoreBtnDark} onClick={() => setShowDownloadModal(true)}>
+                  <Apple size={18} />
+                  <div style={{ textAlign: "left" }}>
+                    <div style={{ fontSize: "10px", opacity: 0.7, lineHeight: 1 }}>Download on the</div>
+                    <div style={{ fontWeight: 700, fontSize: "15px" }}>App Store</div>
+                  </div>
+                </button>
+                <button style={{ ...s.ctaStoreBtnDark, background: "rgba(255,255,255,0.12)" }} onClick={() => setShowDownloadModal(true)}>
+                  <Download size={18} />
+                  <div style={{ textAlign: "left" }}>
+                    <div style={{ fontSize: "10px", opacity: 0.7, lineHeight: 1 }}>Get it on</div>
+                    <div style={{ fontWeight: 700, fontSize: "15px" }}>Google Play</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CONTACT */}
+      <section
+        ref={(el: HTMLElement | null) => { sectionRefs.current["Contact"] = el; }}
+        style={{ ...s.section, background: C.bgDark }}
+      >
+        <div style={{ ...s.container, padding: containerPadding }}>
+          <div style={s.sectionHeader}>
+            <p style={s.eyebrow}>Contact</p>
+            <h2 style={s.sectionTitle}>Get in touch</h2>
+            <p style={s.sectionSub}>
+              Questions about clinical integration or enterprise licensing? Our team responds within one business day.
+            </p>
+          </div>
+
+          <div
+            style={{
+              ...s.contactLayout,
+              gridTemplateColumns: screen.mobile ? "1fr" : "1fr 1.5fr",
+            }}
+          >
+            <div style={s.contactInfo}>
+              {[
+                { icon: <Mail size={18} color={C.sky} />, label: "Email", value: "support@derma-ai.com" },
+                { icon: <Phone size={18} color={C.sky} />, label: "Phone", value: "+1 (800) 555-DERMA" },
+              ].map(({ icon, label, value }) => (
+                <div key={label} style={s.contactCard}>
+                  <div style={s.contactIcon}>{icon}</div>
+                  <div>
+                    <p style={s.contactLabel}>{label}</p>
+                    <p style={s.contactValue}>{value}</p>
+                  </div>
+                </div>
+              ))}
+              <div style={s.contactBadgeGroup}>
+                {["HIPAA", "SOC 2", "FDA", "FHIR"].map((b) => (
+                  <span key={b} style={s.complianceBadge}>{b}</span>
                 ))}
               </div>
             </div>
 
-            <div style={s.splitImage}>
-              <img
-                src="https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=900"
-                alt="Clinical setting"
-                style={s.aboutImg}
-              />
-              <div style={s.aboutImgCard}>
-                <div style={s.aboutImgCardTop}>
-                  <div style={s.dot} />
-                  <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 500 }}>
-                    Assessment complete
-                  </span>
-                </div>
-                <p style={{ margin: 0, fontSize: "22px", fontWeight: 700, color: "#0f172a" }}>
-                  Healthy baseline
-                </p>
-                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#64748b" }}>
-                  Moisture index · 84/100
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Features ── */}
-      <section
-        ref={(el) => (sectionRefs.current["Features"] = el)}
-        style={s.section}
-      >
-        <div style={s.container}>
-          <div style={s.sectionHeader}>
-            <p style={s.eyebrow}>Platform capabilities</p>
-            <h2 style={s.sectionTitle}>Built for clinical environments</h2>
-            <p style={s.sectionSubtitle}>
-              Every component of DermaAI is designed to meet the rigorous standards 
-              of healthcare data infrastructure.
-            </p>
-          </div>
-
-          <div style={s.featuresGrid}>
-            {FEATURES.map((f, i) => (
-              <div key={i} style={s.featureCard}>
-                <div style={s.featureIconWrap}>{f.icon}</div>
-                <h3 style={s.featureTitle}>{f.title}</h3>
-                <p style={s.featureDesc}>{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA Banner ── */}
-      <div style={s.ctaBanner}>
-        <div style={s.container}>
-          <div style={s.ctaInner}>
-            <div>
-              <h2 style={s.ctaTitle}>Ready to assess your skin health?</h2>
-              <p style={s.ctaBody}>
-                Join 40,000+ users who've received their first AI-powered dermatological report.
-              </p>
-            </div>
-            <button style={s.ctaBtn} onClick={() => navigate("/login")}>
-              Start free assessment <ArrowRight size={16} strokeWidth={2.5} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Contact ── */}
-      <section
-        ref={(el) => (sectionRefs.current["Contact"] = el)}
-        style={s.section}
-      >
-        <div style={s.container}>
-          <div style={s.sectionHeader}>
-            <p style={s.eyebrow}>Contact</p>
-            <h2 style={s.sectionTitle}>Get in touch</h2>
-            <p style={s.sectionSubtitle}>
-              Clinical partnerships, press inquiries, or technical support — we respond within one business day.
-            </p>
-          </div>
-
-          <div style={s.contactLayout}>
-            <div style={s.contactDetails}>
-              <div style={s.contactItem}>
-                <div style={s.contactIconWrap}>
-                  <Mail size={16} color="#0ea5e9" strokeWidth={2} />
-                </div>
-                <div>
-                  <p style={s.contactLabel}>Email</p>
-                  <p style={s.contactValue}>support@derma-ai.com</p>
-                </div>
-              </div>
-              <div style={s.contactItem}>
-                <div style={s.contactIconWrap}>
-                  <Phone size={16} color="#0ea5e9" strokeWidth={2} />
-                </div>
-                <div>
-                  <p style={s.contactLabel}>Phone</p>
-                  <p style={s.contactValue}>+1 (800) 555-DERMA</p>
-                </div>
-              </div>
-              <div style={s.contactNote}>
-                <Users size={14} color="#94a3b8" />
-                <span>
-                  For clinical partnership inquiries, please include your institution name and NPI number.
-                </span>
-              </div>
-            </div>
-
-            <form style={s.form} onSubmit={(e) => e.preventDefault()}>
-              <div style={s.formRow}>
-                <input type="text" placeholder="Full name" style={s.input} />
+            <form style={s.contactForm}>
+              <div style={{ ...s.formRow, gridTemplateColumns: screen.mobile ? "1fr" : "1fr 1fr" }}>
+                <input type="text" placeholder="Full Name" style={s.input} />
                 <input type="text" placeholder="Organization" style={s.input} />
               </div>
-              <input type="email" placeholder="Email address" style={s.inputFull} />
-              <textarea placeholder="Your message" rows={5} style={s.textarea} />
+              <input type="email" placeholder="Email Address" style={s.inputFull} />
+              <textarea rows={5} placeholder="Your message…" style={s.textarea} />
               <button type="submit" style={s.submitBtn}>
-                Send message <ArrowRight size={15} strokeWidth={2.5} />
+                Send Message
+                <ArrowRight size={16} />
               </button>
             </form>
           </div>
         </div>
       </section>
 
-      {/* ── Footer ── */}
+      {/* FOOTER */}
       <footer style={s.footer}>
-        <div style={s.footerInner}>
-          <div style={s.footerBrand}>
-            <div style={s.logoMark}>
-              <ShieldCheck size={14} strokeWidth={2.5} color="#fff" />
+        <div style={{ ...s.footerInner, padding: containerPadding }}>
+          <div style={s.footerLeft}>
+            <div style={s.navLogo}>
+              <div style={s.logoMark}><ShieldCheck size={14} color="#fff" /></div>
+              <span style={{ ...s.logoText, color: C.navy }}>
+                Derma<span style={{ color: C.sky }}>AI</span>
+              </span>
             </div>
-            <span style={s.logoText}>
-              Derma<span style={{ color: "#0ea5e9" }}>AI</span>
-            </span>
+            <p style={s.footerText}>
+              Clinical-grade dermatological AI. HIPAA compliant, FDA registered, SOC 2 certified.
+            </p>
           </div>
-          <p style={s.footerText}>
-            © 2026 DermaAI System. Professional dermatological intelligence.
-          </p>
-          <div style={s.footerLinks}>
-            {["Privacy Policy", "Terms of Use", "HIPAA Notice"].map((l) => (
-              <a key={l} href="#" style={s.footerLink}>{l}</a>
-            ))}
-          </div>
+          <p style={s.footerCopy}>© {new Date().getFullYear()} DermaAI. All rights reserved.</p>
         </div>
       </footer>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────
-// Styles
-// ─────────────────────────────────────────────
-const C = {
-  sky: "#0ea5e9",
-  navy: "#0f172a",
-  slate: "#64748b",
-  border: "#e2e8f0",
-  bgAlt: "#f8fafc",
-  white: "#ffffff",
-};
-
 const s: Record<string, React.CSSProperties> = {
   root: {
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    color: C.navy,
-    background: C.white,
+    fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif",
     overflowX: "hidden",
+    background: "#fff",
+    color: C.navy,
   },
 
-  // Nav
+  // ── MODAL ──────────────────────────────────
+  modalOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(6,13,26,0.8)",
+    backdropFilter: "blur(8px)",
+    zIndex: 9999,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "20px",
+  },
+  modal: {
+    background: "#fff",
+    borderRadius: "24px",
+    padding: "40px",
+    maxWidth: "420px",
+    width: "100%",
+    position: "relative",
+    boxShadow: "0 40px 100px rgba(0,0,0,0.3)",
+    textAlign: "center",
+  },
+  modalClose: {
+    position: "absolute",
+    top: "16px",
+    right: "16px",
+    border: "none",
+    background: "#f1f5f9",
+    borderRadius: "8px",
+    width: "34px",
+    height: "34px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    color: C.slate,
+  },
+  modalLogo: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "10px",
+    marginBottom: "20px",
+  },
+  modalTitle: {
+    fontSize: "24px",
+    fontWeight: 800,
+    color: C.navy,
+    margin: "0 0 8px",
+  },
+  modalSub: {
+    color: C.slate,
+    fontSize: "14px",
+    lineHeight: 1.6,
+    margin: "0 0 16px",
+  },
+  modalRating: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: "24px",
+  },
+  modalBtns: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "10px",
+    marginBottom: "16px",
+  },
+  storeBtn: {
+    display: "flex",
+    alignItems: "center",
+    gap: "14px",
+    padding: "14px 20px",
+    background: C.navy,
+    color: "#fff",
+    borderRadius: "14px",
+    textDecoration: "none",
+  },
+  storeBtnSub: {
+    display: "block",
+    fontSize: "10px",
+    opacity: 0.7,
+    lineHeight: 1,
+  },
+  storeBtnMain: {
+    display: "block",
+    fontSize: "16px",
+    fontWeight: 700,
+  },
+  modalNote: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "5px",
+    fontSize: "12px",
+    color: C.slateLight,
+  },
+
+  // ── NAVBAR ──────────────────────────────────
   nav: {
     position: "fixed",
     top: 0,
     left: 0,
     right: 0,
-    zIndex: 1000,
-    transition: "background 0.2s, border-color 0.2s, box-shadow 0.2s, backdrop-filter 0.2s",
+    zIndex: 999,
+    transition: "all .3s ease",
   },
   navInner: {
     maxWidth: "1280px",
-    margin: "0 auto",
-    padding: "0 40px",
     height: "72px",
+    margin: "0 auto",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  navLogo: { display: "flex", alignItems: "center", gap: "10px" },
+  navLogo: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+  },
   logoMark: {
-    width: "32px",
-    height: "32px",
-    borderRadius: "8px",
-    background: "linear-gradient(135deg, #0ea5e9, #6366f1)",
+    width: "36px",
+    height: "36px",
+    borderRadius: "10px",
+    background: "linear-gradient(135deg,#0ea5e9,#0d9488)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
   logoText: {
     fontSize: "18px",
     fontWeight: 800,
-    letterSpacing: "-0.5px",
     color: C.navy,
+    letterSpacing: "-0.02em",
   },
   navLinks: {
     display: "flex",
     gap: "4px",
-    position: "absolute" as const,
-    left: "50%",
-    transform: "translateX(-50%)",
   },
   navLink: {
-    background: "none",
     border: "none",
+    background: "none",
+    cursor: "pointer",
     padding: "8px 14px",
-    borderRadius: "8px",
-    fontSize: "14px",
-    cursor: "pointer",
-    transition: "background 0.15s, color 0.15s",
-  },
-  navActions: { display: "flex", gap: "8px", alignItems: "center" },
-  navSignIn: {
-    background: "none",
-    border: "none",
-    padding: "8px 16px",
-    fontSize: "14px",
     fontWeight: 500,
-    color: C.slate,
-    cursor: "pointer",
-    borderRadius: "8px",
-  },
-  navCta: {
-    padding: "9px 18px",
-    background: C.navy,
-    color: "#fff",
-    border: "none",
-    borderRadius: "9px",
     fontSize: "14px",
-    fontWeight: 600,
-    cursor: "pointer",
+    transition: "color .2s",
+    paddingBottom: "6px",
+  },
+  navActions: {
     display: "flex",
     alignItems: "center",
-    gap: "6px",
+    gap: "10px",
+  },
+  navSignIn: {
+    border: "none",
+    background: "none",
+    cursor: "pointer",
+    fontWeight: 500,
+    color: C.slate,
+    fontSize: "14px",
+  },
+  navCta: {
+    border: "none",
+    background: "linear-gradient(135deg,#0ea5e9,#0d9488)",
+    color: "#fff",
+    padding: "10px 18px",
+    borderRadius: "10px",
+    display: "flex",
+    alignItems: "center",
+    gap: "7px",
+    cursor: "pointer",
+    fontWeight: 600,
+    fontSize: "14px",
+  },
+  menuBtn: {
+    border: "none",
+    background: "none",
+    cursor: "pointer",
+  },
+  mobileMenu: {
+    background: "#fff",
+    padding: "16px 20px 20px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+    borderTop: `1px solid ${C.border}`,
+  },
+  mobileMenuItem: {
+    border: "none",
+    background: C.bgDark,
+    padding: "14px",
+    borderRadius: "10px",
+    textAlign: "left",
+    cursor: "pointer",
+    fontWeight: 600,
+    color: C.navy,
   },
 
-  // Hero
+  // ── HERO ──────────────────────────────────
   hero: {
     paddingTop: "72px",
-    background: "#fafbfc",
-    borderBottom: `1px solid ${C.border}`,
-    overflow: "hidden",
     position: "relative",
+    background: "#fff",
+    overflow: "hidden",
   },
   heroGrid: {
     position: "absolute",
     inset: 0,
     backgroundImage:
-      "linear-gradient(rgba(14,165,233,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.04) 1px, transparent 1px)",
-    backgroundSize: "48px 48px",
-    pointerEvents: "none",
+      "linear-gradient(rgba(14,165,233,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(14,165,233,0.06) 1px,transparent 1px)",
+    backgroundSize: "56px 56px",
+    maskImage: "radial-gradient(ellipse at center, black 40%, transparent 80%)",
   },
-  heroGlow: {
+  heroNoise: {
     position: "absolute",
-    top: "-120px",
-    right: "-80px",
+    inset: 0,
+    opacity: 0,
+  },
+  heroGlow1: {
+    position: "absolute",
+    top: "-200px",
+    left: "-200px",
     width: "600px",
     height: "600px",
     borderRadius: "50%",
-    background:
-      "radial-gradient(circle, rgba(14,165,233,0.08) 0%, transparent 70%)",
+    background: "radial-gradient(circle, rgba(14,165,233,0.08) 0%, transparent 70%)",
+    pointerEvents: "none",
+  },
+  heroGlow2: {
+    position: "absolute",
+    bottom: "-100px",
+    right: "-100px",
+    width: "500px",
+    height: "500px",
+    borderRadius: "50%",
+    background: "radial-gradient(circle, rgba(13,148,136,0.07) 0%, transparent 70%)",
     pointerEvents: "none",
   },
   heroInner: {
     maxWidth: "1280px",
     margin: "0 auto",
-    padding: "80px 40px 60px",
     display: "flex",
     alignItems: "center",
-    gap: "80px",
     position: "relative",
     zIndex: 1,
   },
-  heroLeft: { flex: "0 0 52%", maxWidth: "620px" },
+  heroLeft: {
+    flex: 1,
+  },
   heroBadge: {
     display: "inline-flex",
     alignItems: "center",
     gap: "6px",
-    padding: "5px 12px 5px 10px",
+    padding: "7px 14px",
     background: "#f0f9ff",
     border: "1px solid #bae6fd",
-    borderRadius: "50px",
+    borderRadius: "999px",
+    color: C.sky,
     fontSize: "12px",
-    fontWeight: 600,
-    color: "#0369a1",
+    fontWeight: 700,
     marginBottom: "28px",
-    letterSpacing: "0.01em",
+    letterSpacing: "0.02em",
   },
   heroH1: {
-    fontSize: "clamp(36px, 4vw, 52px)",
+    fontSize: "clamp(38px,5vw,68px)",
+    lineHeight: 1.0,
     fontWeight: 800,
-    lineHeight: 1.08,
-    letterSpacing: "-0.035em",
-    marginBottom: "20px",
+    letterSpacing: "-0.04em",
     color: C.navy,
+    margin: 0,
   },
   heroAccent: {
-    background: "linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)",
+    background: "linear-gradient(135deg,#0ea5e9,#0d9488)",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
   },
   heroBody: {
     fontSize: "17px",
-    lineHeight: 1.65,
+    lineHeight: 1.75,
     color: C.slate,
-    marginBottom: "36px",
-    maxWidth: "520px",
+    marginTop: "24px",
+    maxWidth: "480px",
   },
   heroCtas: {
     display: "flex",
-    gap: "12px",
+    gap: "14px",
     flexWrap: "wrap" as const,
-    marginBottom: "28px",
+    marginTop: "36px",
   },
   heroPrimary: {
-    padding: "14px 24px",
-    background: C.sky,
-    color: "#fff",
     border: "none",
-    borderRadius: "10px",
-    fontSize: "15px",
-    fontWeight: 600,
-    cursor: "pointer",
+    background: "linear-gradient(135deg,#0ea5e9,#0d9488)",
+    color: "#fff",
+    padding: "15px 24px",
+    borderRadius: "12px",
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    boxShadow: "0 1px 2px rgba(14,165,233,0.3), 0 4px 12px rgba(14,165,233,0.15)",
+    cursor: "pointer",
+    fontWeight: 700,
+    fontSize: "15px",
+    boxShadow: "0 8px 24px rgba(14,165,233,0.35)",
   },
   heroSecondary: {
-    padding: "14px 20px",
-    background: C.white,
-    color: C.navy,
     border: `1px solid ${C.border}`,
-    borderRadius: "10px",
-    fontSize: "15px",
-    fontWeight: 500,
-    cursor: "pointer",
+    background: "#fff",
+    color: C.slate,
+    padding: "15px 24px",
+    borderRadius: "12px",
     display: "flex",
     alignItems: "center",
-    gap: "6px",
+    gap: "8px",
+    cursor: "pointer",
+    fontWeight: 600,
+    fontSize: "15px",
   },
-  heroTrust: { display: "flex", gap: "20px", flexWrap: "wrap" as const },
+  heroTrust: {
+    display: "flex",
+    gap: "20px",
+    flexWrap: "wrap" as const,
+    marginTop: "28px",
+  },
   trustPill: {
     display: "flex",
     alignItems: "center",
     gap: "6px",
     fontSize: "12px",
+    color: C.slate,
     fontWeight: 500,
-    color: "#475569",
+  },
+  heroRight: {
+    flex: 1,
+    display: "flex",
+    justifyContent: "center",
   },
 
-  // Mockup
-  heroRight: { flex: 1, display: "flex", justifyContent: "center" },
-  mockupFrame: {
-    position: "relative",
-    width: "280px",
-    height: "520px",
-  },
+  // mockups
+  mockupFrame: { position: "relative" },
   mockupCard: {
     position: "absolute",
-    borderRadius: "24px",
     overflow: "hidden",
-    border: "3px solid #1e293b",
-    background: "#000",
-    boxShadow: "0 24px 60px rgba(0,0,0,0.18)",
+    borderRadius: "24px",
+    background: "#f1f5f9",
+    border: "2px solid #e2e8f0",
+    boxShadow: "0 30px 80px rgba(0,0,0,.12)",
   },
   mockupBack: {
     width: "200px",
-    top: "40px",
-    left: "-30px",
-    opacity: 0.5,
+    top: "50px",
+    left: "-20px",
+    opacity: 0.4,
     transform: "rotate(-6deg)",
-    zIndex: 1,
   },
   mockupMid: {
-    width: "200px",
+    width: "220px",
     top: "20px",
     right: "-20px",
     opacity: 0.65,
-    transform: "rotate(4deg)",
-    zIndex: 2,
+    transform: "rotate(5deg)",
   },
   mockupFront: {
-    width: "230px",
-    bottom: "0",
+    width: "240px",
+    bottom: 0,
     left: "50%",
     transform: "translateX(-50%)",
-    zIndex: 3,
   },
   mockupImg: { width: "100%", display: "block" },
   mockupBadge: {
@@ -700,377 +978,479 @@ const s: Record<string, React.CSSProperties> = {
     bottom: "16px",
     left: "50%",
     transform: "translateX(-50%)",
-    background: "rgba(255,255,255,0.95)",
-    border: `1px solid ${C.border}`,
-    borderRadius: "50px",
-    padding: "6px 14px",
-    fontSize: "12px",
-    fontWeight: 600,
-    color: C.navy,
-    whiteSpace: "nowrap" as const,
+    background: "rgba(255,255,255,.97)",
+    borderRadius: "999px",
+    padding: "8px 16px",
     display: "flex",
     alignItems: "center",
-    gap: "6px",
+    gap: "8px",
+    fontSize: "12px",
+    fontWeight: 700,
+    whiteSpace: "nowrap" as const,
+    boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
   },
   mockupBadgeDot: {
-    width: "7px",
-    height: "7px",
+    width: "8px",
+    height: "8px",
     borderRadius: "50%",
     background: "#22c55e",
-    flexShrink: 0,
   },
 
-  // Stats bar
+  // stats
   statsBar: {
     maxWidth: "1280px",
     margin: "0 auto",
-    padding: "0 40px",
     display: "flex",
-    alignItems: "center",
     justifyContent: "center",
     borderTop: `1px solid ${C.border}`,
     position: "relative",
     zIndex: 1,
   },
   statCell: {
-    display: "flex",
-    flexDirection: "column" as const,
-    alignItems: "center",
-    padding: "28px 48px",
-    gap: "3px",
+    padding: "32px 48px",
+    textAlign: "center",
+  },
+  statDivider: {
+    width: "1px",
+    background: C.border,
+    alignSelf: "stretch",
+    margin: "20px 0",
   },
   statValue: {
-    fontSize: "28px",
+    display: "block",
+    fontSize: "30px",
     fontWeight: 800,
     color: C.navy,
     letterSpacing: "-0.03em",
   },
   statLabel: {
-    fontSize: "12px",
-    fontWeight: 500,
+    display: "block",
+    fontSize: "11px",
     color: C.slate,
     textTransform: "uppercase" as const,
-    letterSpacing: "0.06em",
-  },
-  statDivider: {
-    width: "1px",
-    height: "36px",
-    background: C.border,
+    letterSpacing: "0.08em",
+    marginTop: "4px",
+    fontWeight: 600,
   },
 
-  // Sections
-  section: { padding: "96px 0" },
-  sectionAlt: { padding: "96px 0", background: C.bgAlt, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` },
-  container: { maxWidth: "1280px", margin: "0 auto", padding: "0 40px" },
-  sectionHeader: { textAlign: "center", maxWidth: "640px", margin: "0 auto 60px" },
+  // ── SECTIONS ──────────────────────────────────
+  section: {
+    padding: "100px 0",
+    background: "#fff",
+  },
+  sectionDark: {
+    padding: "100px 0",
+    background: C.bgDark,
+    position: "relative",
+    overflow: "hidden",
+  },
+  sectionDarkGlow: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%,-50%)",
+    width: "800px",
+    height: "400px",
+    background: "radial-gradient(ellipse, rgba(255, 255, 255, 0.05) 0%, transparent 70%)",
+    pointerEvents: "none",
+  },
+  container: {
+    maxWidth: "1280px",
+    margin: "0 auto",
+  },
+  sectionHeader: {
+    textAlign: "center",
+    marginBottom: "64px",
+  },
   eyebrow: {
-    fontSize: "12px",
-    fontWeight: 700,
-    letterSpacing: "0.1em",
-    textTransform: "uppercase" as const,
     color: C.sky,
+    fontWeight: 700,
+    fontSize: "12px",
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.12em",
+    marginBottom: "12px",
+  },
+  eyebrowLight: {
+    color: C.sky,
+    fontWeight: 700,
+    fontSize: "12px",
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.12em",
     marginBottom: "12px",
   },
   sectionTitle: {
-    fontSize: "clamp(28px, 3vw, 38px)",
+    fontSize: "clamp(28px,3.5vw,42px)",
     fontWeight: 800,
-    letterSpacing: "-0.03em",
-    lineHeight: 1.15,
-    marginBottom: "16px",
     color: C.navy,
+    lineHeight: 1.1,
+    letterSpacing: "-0.03em",
+    margin: "0 0 16px",
   },
-  sectionSubtitle: {
-    fontSize: "16px",
-    lineHeight: 1.65,
+  sectionSub: {
     color: C.slate,
+    fontSize: "16px",
+    lineHeight: 1.7,
+    maxWidth: "520px",
+    margin: "0 auto",
   },
 
-  // Workflow
+  // workflow
   workflowGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
-    gap: "2px",
-    background: C.border,
-    borderRadius: "16px",
-    overflow: "hidden",
+    gap: "20px",
   },
   workflowCard: {
-    background: C.white,
-    padding: "36px 28px",
+    background: "#fff",
+    border: `1px solid ${C.border}`,
+    borderRadius: "20px",
+    padding: "32px",
+    transition: "box-shadow .2s",
     position: "relative",
   },
   workflowTop: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: "20px",
+    marginBottom: "16px",
   },
   workflowIconWrap: {
-    width: "48px",
-    height: "48px",
-    borderRadius: "12px",
+    width: "52px",
+    height: "52px",
+    borderRadius: "14px",
     background: "#f0f9ff",
+    border: "1px solid #bae6fd",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     color: C.sky,
   },
   workflowStep: {
-    fontSize: "13px",
-    fontWeight: 700,
-    color: "#cbd5e1",
-    letterSpacing: "0.05em",
-    fontVariantNumeric: "tabular-nums",
+    color: "#e2e8f0",
+    fontWeight: 800,
+    fontSize: "20px",
+    letterSpacing: "-0.04em",
+  },
+  workflowConnector: {
+    width: "28px",
+    height: "2px",
+    background: "linear-gradient(90deg,#0ea5e9,#0d9488)",
+    borderRadius: "2px",
+    marginBottom: "20px",
   },
   workflowTitle: {
     fontSize: "17px",
     fontWeight: 700,
     marginBottom: "10px",
     color: C.navy,
-    letterSpacing: "-0.02em",
   },
   workflowDesc: {
-    fontSize: "14px",
-    lineHeight: 1.6,
     color: C.slate,
-  },
-  workflowArrow: {
-    position: "absolute",
-    top: "52px",
-    right: "-10px",
-    zIndex: 10,
-    background: C.white,
-    border: `1px solid ${C.border}`,
-    borderRadius: "50%",
-    width: "22px",
-    height: "22px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    lineHeight: 1.7,
+    fontSize: "14px",
   },
 
-  // About / Split
-  splitLayout: {
+  // about
+  aboutLayout: {
     display: "flex",
-    gap: "80px",
     alignItems: "center",
+    gap: "80px",
   },
-  splitText: { flex: "0 0 48%" },
-  splitImage: { flex: 1, position: "relative" },
-  bodyText: {
-    fontSize: "16px",
-    lineHeight: 1.7,
-    color: C.slate,
+  aboutLeft: { flex: 1 },
+  aboutRight: { flex: 1, position: "relative" },
+  aboutText: {
+    lineHeight: 1.8,
     marginBottom: "16px",
-  },
-  checkList: { marginTop: "24px", display: "flex", flexDirection: "column" as const, gap: "12px" },
-  checkItem: {
-    display: "flex",
-    alignItems: "flex-start",
-    gap: "10px",
     fontSize: "15px",
-    fontWeight: 500,
-    color: C.navy,
-    lineHeight: 1.4,
   },
-  aboutImg: {
+  aboutChecklist: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "12px",
+    marginTop: "24px",
+  },
+  aboutCheckItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+  },
+  aboutImage: {
     width: "100%",
     borderRadius: "20px",
     display: "block",
-    objectFit: "cover" as const,
-    aspectRatio: "4/3",
+    filter: "brightness(0.85)",
   },
-  aboutImgCard: {
+  aboutCard: {
     position: "absolute",
-    bottom: "-20px",
-    left: "-20px",
-    background: C.white,
-    border: `1px solid ${C.border}`,
-    borderRadius: "16px",
-    padding: "18px 22px",
-    boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+    bottom: "-24px",
+    left: "-24px",
+    background: "#fff",
+    padding: "20px 24px",
+    borderRadius: "18px",
+    boxShadow: "0 20px 50px rgba(0,0,0,0.15)",
+    minWidth: "200px",
   },
-  aboutImgCardTop: { display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" },
-  dot: { width: "8px", height: "8px", borderRadius: "50%", background: "#22c55e" },
+  aboutCardTop: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    marginBottom: "8px",
+  },
+  aboutCardDot: {
+    width: "8px",
+    height: "8px",
+    borderRadius: "50%",
+    background: "#22c55e",
+    flexShrink: 0,
+  },
+  aboutCardTitle: {
+    margin: 0,
+    fontSize: "26px",
+    fontWeight: 800,
+    color: C.navy,
+    letterSpacing: "-0.04em",
+  },
+  aboutCardText: {
+    fontSize: "13px",
+    marginTop: "4px",
+  },
 
-  // Features
+  // features
   featuresGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
     gap: "20px",
+    marginBottom: "60px",
   },
   featureCard: {
-    padding: "28px 24px",
-    background: C.white,
     border: `1px solid ${C.border}`,
-    borderRadius: "16px",
-    transition: "border-color 0.2s",
+    borderRadius: "20px",
+    padding: "30px",
+    transition: "border-color .2s",
   },
   featureIconWrap: {
-    width: "44px",
-    height: "44px",
-    borderRadius: "10px",
+    width: "48px",
+    height: "48px",
+    borderRadius: "12px",
     background: "#f0f9ff",
+    border: "1px solid #bae6fd",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     color: C.sky,
-    marginBottom: "16px",
+    marginBottom: "20px",
   },
   featureTitle: {
     fontSize: "16px",
     fontWeight: 700,
     marginBottom: "8px",
     color: C.navy,
-    letterSpacing: "-0.02em",
   },
-  featureDesc: { fontSize: "14px", lineHeight: 1.6, color: C.slate },
+  featureDesc: {
+    color: C.slate,
+    lineHeight: 1.7,
+    fontSize: "14px",
+  },
 
-  // CTA Banner
+  // CTA banner
   ctaBanner: {
-    background: C.navy,
-    padding: "60px 0",
+    borderRadius: "24px",
+    background: "linear-gradient(135deg,#0a1628,#112240)",
+    padding: "60px 48px",
+    textAlign: "center" as const,
+    position: "relative",
+    overflow: "hidden",
   },
-  ctaInner: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "40px",
-    flexWrap: "wrap" as const,
+  ctaBannerGlow: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%,-50%)",
+    width: "500px",
+    height: "200px",
+    background: "radial-gradient(ellipse, rgba(14,165,233,0.2) 0%, transparent 70%)",
+    pointerEvents: "none",
   },
-  ctaTitle: {
-    fontSize: "26px",
+  ctaBannerEye: {
+    color: C.sky,
+    fontWeight: 700,
+    fontSize: "12px",
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.12em",
+    marginBottom: "12px",
+  },
+  ctaBannerTitle: {
+    fontSize: "32px",
     fontWeight: 800,
     color: "#fff",
+    margin: "0 0 12px",
     letterSpacing: "-0.03em",
-    marginBottom: "8px",
   },
-  ctaBody: { fontSize: "15px", color: "#94a3b8", margin: 0 },
-  ctaBtn: {
-    padding: "14px 24px",
-    background: C.sky,
-    color: "#fff",
-    border: "none",
-    borderRadius: "10px",
+  ctaBannerSub: {
+    color: C.slateLight,
     fontSize: "15px",
-    fontWeight: 600,
-    cursor: "pointer",
+    marginBottom: "32px",
+  },
+  ctaBannerBtns: {
+    display: "flex",
+    gap: "12px",
+    justifyContent: "center",
+    flexWrap: "wrap" as const,
+  },
+  ctaStoreBtnDark: {
     display: "flex",
     alignItems: "center",
-    gap: "8px",
-    whiteSpace: "nowrap" as const,
-    boxShadow: "0 4px 16px rgba(14,165,233,0.25)",
-    flexShrink: 0,
+    gap: "12px",
+    padding: "14px 24px",
+    background: "rgba(255,255,255,0.08)",
+    border: "1px solid rgba(255,255,255,0.12)",
+    borderRadius: "14px",
+    color: "#fff",
+    cursor: "pointer",
   },
 
-  // Contact
+  // contact
   contactLayout: {
     display: "grid",
-    gridTemplateColumns: "1fr 1.8fr",
     gap: "60px",
-    alignItems: "start",
   },
-  contactDetails: { display: "flex", flexDirection: "column" as const, gap: "24px" },
-  contactItem: { display: "flex", gap: "16px", alignItems: "flex-start" },
-  contactIconWrap: {
-    width: "40px",
-    height: "40px",
-    borderRadius: "10px",
+  contactInfo: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "20px",
+    justifyContent: "flex-start",
+  },
+  contactCard: {
+    display: "flex",
+    gap: "16px",
+    alignItems: "flex-start",
+  },
+  contactIcon: {
+    width: "46px",
+    height: "46px",
+    borderRadius: "12px",
     background: "#f0f9ff",
+    border: "1px solid #bae6fd",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
-  contactLabel: { fontSize: "12px", fontWeight: 600, color: C.slate, margin: "0 0 3px", textTransform: "uppercase" as const, letterSpacing: "0.06em" },
-  contactValue: { fontSize: "15px", fontWeight: 600, color: C.navy, margin: 0 },
-  contactNote: {
-    display: "flex",
-    gap: "10px",
-    padding: "14px 16px",
-    background: C.bgAlt,
-    borderRadius: "10px",
-    fontSize: "13px",
-    color: C.slate,
-    lineHeight: 1.55,
-    alignItems: "flex-start",
-    border: `1px solid ${C.border}`,
+  contactLabel: {
+    fontSize: "11px",
+    fontWeight: 700,
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.08em",
+    color: C.slateLight,
+    marginBottom: "4px",
   },
-
-  // Form
-  form: { display: "flex", flexDirection: "column" as const, gap: "12px" },
-  formRow: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" },
-  input: {
-    padding: "12px 14px",
-    borderRadius: "10px",
-    border: `1px solid ${C.border}`,
-    fontSize: "14px",
+  contactValue: {
+    fontWeight: 600,
     color: C.navy,
+    fontSize: "15px",
+  },
+  contactBadgeGroup: {
+    display: "flex",
+    gap: "8px",
+    flexWrap: "wrap" as const,
+    marginTop: "8px",
+  },
+  complianceBadge: {
+    padding: "6px 14px",
+    borderRadius: "8px",
+    background: "#f0f9ff",
+    border: "1px solid #bae6fd",
+    color: C.sky,
+    fontSize: "12px",
+    fontWeight: 700,
+    letterSpacing: "0.05em",
+  },
+  contactForm: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "12px",
+  },
+  formRow: {
+    display: "grid",
+    gap: "12px",
+  },
+  input: {
+    padding: "14px 16px",
+    borderRadius: "12px",
+    border: `1px solid ${C.border}`,
     outline: "none",
-    background: C.white,
+    fontSize: "14px",
     fontFamily: "inherit",
+    background: "#fff",
+    color: C.navy,
   },
   inputFull: {
-    padding: "12px 14px",
-    borderRadius: "10px",
+    padding: "14px 16px",
+    borderRadius: "12px",
     border: `1px solid ${C.border}`,
-    fontSize: "14px",
-    color: C.navy,
     outline: "none",
-    width: "100%",
-    boxSizing: "border-box" as const,
-    background: C.white,
+    fontSize: "14px",
     fontFamily: "inherit",
+    background: "#fff",
+    color: C.navy,
   },
   textarea: {
-    padding: "12px 14px",
-    borderRadius: "10px",
+    padding: "14px 16px",
+    borderRadius: "12px",
     border: `1px solid ${C.border}`,
-    fontSize: "14px",
-    color: C.navy,
     outline: "none",
     resize: "vertical" as const,
-    background: C.white,
+    fontSize: "14px",
     fontFamily: "inherit",
-    lineHeight: 1.6,
+    background: "#fff",
+    color: C.navy,
   },
   submitBtn: {
-    alignSelf: "flex-start",
-    padding: "13px 24px",
+    border: "none",
     background: C.navy,
     color: "#fff",
-    border: "none",
-    borderRadius: "10px",
-    fontSize: "14px",
-    fontWeight: 600,
-    cursor: "pointer",
+    padding: "14px 24px",
+    borderRadius: "12px",
     display: "flex",
     alignItems: "center",
     gap: "8px",
+    cursor: "pointer",
+    fontWeight: 700,
+    fontSize: "15px",
+    width: "fit-content",
   },
 
-  // Footer
+  // footer
   footer: {
+    background: C.bgDark,
     borderTop: `1px solid ${C.border}`,
     padding: "32px 0",
   },
   footerInner: {
     maxWidth: "1280px",
     margin: "0 auto",
-    padding: "0 40px",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: "24px",
     flexWrap: "wrap" as const,
+    gap: "16px",
   },
-  footerBrand: { display: "flex", alignItems: "center", gap: "8px" },
-  footerText: { fontSize: "13px", color: C.slate, margin: 0 },
-  footerLinks: { display: "flex", gap: "20px" },
-  footerLink: {
-    fontSize: "13px",
+  footerLeft: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "10px",
+  },
+  footerText: {
     color: C.slate,
-    textDecoration: "none",
-    fontWeight: 500,
+    fontSize: "13px",
+    maxWidth: "340px",
+    lineHeight: 1.6,
+  },
+  footerCopy: {
+    color: C.slateLight,
+    fontSize: "13px",
+  },
+
+  sectionAlt: {
+    padding: "100px 0",
+    background: "white",
   },
 };

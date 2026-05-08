@@ -2,95 +2,100 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { CSSProperties } from "react";
 import { Lock, Mail, ChevronRight } from "lucide-react";
-import { FcGoogle } from "react-icons/fc";
+import useAuth from "../hooks/useAuth";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [rememberMe, setRememberMe] = useState(false);
+  const { login, isLoading, error } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const [rememberMe, setRememberMe] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/admin/dashboard");
+    const success = await login(email, password);
+    if (success) navigate("/admin/dashboard");
   };
 
   return (
     <div style={styles.container}>
-      <section style={styles.authSide}>
-        <div style={styles.loginWrapper}>
-          <div style={styles.header}>
-            <div style={styles.badge}>
-              <span style={styles.badgeDot}></span>
-              SECURE ACCESS
-            </div>
-            <h1 style={styles.title}>Welcome Back</h1>
-            <p style={styles.subtitle}>Please enter your administrative credentials.</p>
+      <section style={styles.authCard}>
+        <div style={styles.header}>
+          <div style={styles.badge}>
+            <span style={styles.badgeDot}></span> SECURE ACCESS
           </div>
-
-          <form onSubmit={handleLogin} style={styles.form}>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Corporate Email</label>
-              <div style={styles.inputWrapper}>
-                <Mail size={18} style={styles.icon} />
-                <input 
-                  type="email" 
-                  placeholder="name@company.com" 
-                  style={styles.input}
-                  required 
-                />
-              </div>
-            </div>
-
-            <div style={styles.inputGroup}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label style={styles.label}>Password</label>
-                <a href="#" style={styles.forgotPass}>Forgot password?</a>
-              </div>
-              <div style={styles.inputWrapper}>
-                <Lock size={18} style={styles.icon} />
-                <input 
-                  type="password" 
-                  placeholder="••••••••" 
-                  style={styles.input}
-                  required 
-                />
-              </div>
-            </div>
-
-            <div style={styles.optionsRow}>
-              <label style={styles.checkboxLabel}>
-                <input 
-                  type="checkbox" 
-                  checked={rememberMe} 
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  style={styles.checkbox}
-                />
-                Remember this session
-              </label>
-            </div>
-
-            <button type="submit" style={styles.loginButton}>
-              Sign In <ChevronRight size={18} />
-            </button>
-          </form>
-
-          <div style={styles.divider}>
-            <div style={styles.line}></div>
-            <span style={styles.dividerText}>or continue with</span>
-            <div style={styles.line}></div>
-          </div>
-
-          <button style={styles.googleButton}>
-            <FcGoogle size={20} />
-            Single Sign-On (SSO)
-          </button>
-
-          <footer style={styles.footer}>
-            <p style={styles.footerText}>
-              Protected by hardware-level encryption. <br />
-              <a href="#" style={styles.link}>Security Policy</a>
-            </p>
-          </footer>
+          <h1 style={styles.title}>Welcome Back</h1>
+          <p style={styles.subtitle}>Enter your admin credentials</p>
         </div>
+
+        <form onSubmit={handleLogin} style={styles.form}>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Corporate Email</label>
+            <div style={styles.inputWrapper}>
+              <Mail size={16} style={styles.icon} />
+              <input
+                type="email"
+                placeholder="name@company.com"
+                style={styles.input}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Password</label>
+            <div style={styles.inputWrapper}>
+              <Lock size={16} style={styles.icon} />
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                style={styles.input}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                style={styles.showPassBtn}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
+
+          <div style={styles.optionsRow}>
+            <label style={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                style={styles.checkbox}
+              />
+              Remember me
+            </label>
+            <a href="/forgot-password" style={styles.forgotPass}>
+              Forgot password?
+            </a>
+          </div>
+
+          {error && <p style={styles.errorText}>{error}</p>}
+
+          <button type="submit" style={styles.loginButton} disabled={isLoading}>
+            {isLoading ? "Signing in..." : "Sign In"}
+            <ChevronRight size={18} />
+          </button>
+        </form>
+
+        <footer style={styles.footer}>
+          <p style={styles.footerText}>
+            Protected by hardware-level encryption.
+          </p>
+        </footer>
       </section>
     </div>
   );
@@ -102,98 +107,79 @@ const styles: Record<string, CSSProperties> = {
     justifyContent: "center",
     alignItems: "center",
     minHeight: "100vh",
-    backgroundColor: "#f8fafc", // Light gray background for the whole page
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+    backgroundColor: "#f8fafc",
+    fontFamily: "'Inter', sans-serif",
+    padding: "20px",
   },
-  authSide: {
+  authCard: {
     width: "100%",
-    maxWidth: "480px",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
+    maxWidth: "380px",
     backgroundColor: "#fff",
-    padding: "60px 40px",
-    borderRadius: "20px",
-    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)",
-    margin: "20px",
+    padding: "30px",
+    borderRadius: "12px",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
   },
-  loginWrapper: {
-    width: "100%",
-  },
-  header: { marginBottom: "40px", textAlign: "center" },
+  header: { textAlign: "center", marginBottom: "20px" },
   badge: {
     display: "inline-flex",
     alignItems: "center",
-    gap: "8px",
+    gap: "6px",
     backgroundColor: "#f1f5f9",
-    color: "#475569",
-    padding: "6px 12px",
-    borderRadius: "100px",
-    fontSize: "11px",
+    padding: "4px 10px",
+    borderRadius: "999px",
+    fontSize: "10px",
     fontWeight: 700,
-    letterSpacing: "0.05em",
-    marginBottom: "20px",
+    marginBottom: "10px",
+    color: "#475569",
   },
-  badgeDot: { width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#10b981" },
-  title: { fontSize: "32px", fontWeight: 800, color: "#0f172a", marginBottom: "12px", letterSpacing: "-0.02em" },
-  subtitle: { fontSize: "16px", color: "#64748b", fontWeight: 400 },
-
-  form: { display: "flex", flexDirection: "column", gap: "24px" },
-  inputGroup: { display: "flex", flexDirection: "column", gap: "8px" },
-  label: { fontSize: "14px", fontWeight: 600, color: "#334155", textAlign: "left" },
+  badgeDot: { width: "5px", height: "5px", borderRadius: "50%", backgroundColor: "#10b981" },
+  title: { fontSize: "22px", fontWeight: 800, marginBottom: "4px", color: "#0f172a" },
+  subtitle: { color: "#64748b", fontSize: "13px" },
+  form: { display: "flex", flexDirection: "column", gap: "14px" },
+  inputGroup: { display: "flex", flexDirection: "column", gap: "5px" },
+  label: { fontSize: "13px", fontWeight: 600, color: "#334155" },
   inputWrapper: { position: "relative", display: "flex", alignItems: "center" },
-  icon: { position: "absolute", left: "14px", color: "#94a3b8" },
+  icon: { position: "absolute", left: "12px", color: "#94a3b8" },
   input: {
     width: "100%",
-    padding: "12px 14px 12px 44px",
-    borderRadius: "10px",
+    padding: "10px 12px 100px 38px", // Vertical padding reduced
+    paddingTop: "10px",
+    paddingBottom: "10px",
+    borderRadius: "8px",
     border: "1px solid #e2e8f0",
-    fontSize: "15px",
-    transition: "all 0.2s",
-    outline: "none",
-    backgroundColor: "#f8fafc",
+    fontSize: "14px",
+    backgroundColor: "#fcfcfc",
   },
-  forgotPass: { fontSize: "13px", color: "#2563eb", textDecoration: "none", fontWeight: 600 },
-  optionsRow: { display: "flex", alignItems: "center" },
-  checkboxLabel: { display: "flex", alignItems: "center", gap: "10px", fontSize: "14px", color: "#475569", cursor: "pointer" },
-  checkbox: { width: "18px", height: "18px", cursor: "pointer", accentColor: "#0f172a" },
-  
+  showPassBtn: {
+    position: "absolute",
+    right: "10px",
+    background: "none",
+    border: "none",
+    fontSize: "11px",
+    fontWeight: 600,
+    cursor: "pointer",
+    color: "#64748b",
+  },
+  optionsRow: { display: "flex", justifyContent: "space-between", alignItems: "center", margin: "4px 0" },
+  checkboxLabel: { display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#64748b" },
+  checkbox: { width: "14px", height: "14px", cursor: "pointer" },
+  forgotPass: { fontSize: "12px", color: "#0f172a", fontWeight: 600, textDecoration: "none" },
   loginButton: {
     display: "flex",
-    alignItems: "center",
     justifyContent: "center",
+    alignItems: "center",
     gap: "8px",
-    padding: "14px",
-    backgroundColor: "#0f172a",
-    color: "white",
-    border: "none",
-    borderRadius: "10px",
-    fontSize: "16px",
-    fontWeight: 600,
-    cursor: "pointer",
-    transition: "background 0.2s",
-  },
-  divider: { display: "flex", alignItems: "center", margin: "32px 0", gap: "16px" },
-  line: { flex: 1, height: "1px", backgroundColor: "#f1f5f9" },
-  dividerText: { fontSize: "12px", color: "#94a3b8", fontWeight: 500 },
-  
-  googleButton: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "12px",
-    width: "100%",
     padding: "12px",
-    backgroundColor: "white",
-    border: "1px solid #e2e8f0",
-    borderRadius: "10px",
-    fontSize: "15px",
+    backgroundColor: "#0f172a",
+    color: "#fff",
+    border: "none",
+    borderRadius: "8px",
     fontWeight: 600,
-    color: "#334155",
     cursor: "pointer",
+    marginTop: "6px",
     transition: "background 0.2s",
   },
-  footer: { marginTop: "48px", textAlign: "center" },
-  footerText: { fontSize: "13px", color: "#94a3b8", lineHeight: "1.6" },
-  link: { color: "#475569", fontWeight: 600, textDecoration: "none" },
+  errorText: { color: "#ef4444", fontSize: "12px", textAlign: "center" },
+  footer: { marginTop: "20px", textAlign: "center" },
+  footerText: { fontSize: "11px", color: "#94a3b8" },
 };

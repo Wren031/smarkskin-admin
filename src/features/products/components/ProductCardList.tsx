@@ -5,7 +5,6 @@ import {
   Trash2, 
   Calendar, 
   TrendingUp, 
-  Clock, 
   Tag 
 } from "lucide-react";
 import type { CSSProperties } from "react";
@@ -13,13 +12,12 @@ import type { Products } from "../types/Products";
 
 type Props = {
   products: Products[];
-  onDelete?: (id: string) => void; // ID is now a string
+  onDelete?: (id: string) => void;
   onUpdate?: (product: Products) => void;
   loading?: boolean;
 };
 
 export default function ProductCardList({ products, onDelete, onUpdate, loading }: Props) {
-  // State updated to track string ID
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
   const formatCurrency = (value: number) => 
@@ -29,8 +27,7 @@ export default function ProductCardList({ products, onDelete, onUpdate, loading 
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-PH", { 
       month: "short", 
-      day: "numeric", 
-      year: "numeric" 
+      day: "numeric"
     });
   };
 
@@ -38,7 +35,26 @@ export default function ProductCardList({ products, onDelete, onUpdate, loading 
     setActiveMenu((prev) => (prev === id ? null : id));
   };
 
-  if (loading) return <div style={styles.loadingContainer}>Loading tbl_products...</div>;
+  // --- SKELETON LOADING STATE ---
+  if (loading) {
+    return (
+      <div style={styles.container}>
+        <style>{globalStyles}</style>
+        <div style={styles.grid}>
+          {[1, 2, 3].map((i) => (
+            <div key={i} style={styles.card}>
+              <div className="shimmer" style={{ ...styles.imageWrapper, height: 160 }} />
+              <div style={styles.cardBody}>
+                <div className="shimmer" style={{ height: 20, width: "60%", marginBottom: 10, borderRadius: 4 }} />
+                <div className="shimmer" style={{ height: 14, width: "100%", marginBottom: 10, borderRadius: 4 }} />
+                <div className="shimmer" style={{ height: 40, width: "100%", borderRadius: 8 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>
@@ -46,7 +62,7 @@ export default function ProductCardList({ products, onDelete, onUpdate, loading 
       <div style={styles.grid}>
         {products.map((product) => (
           <div key={product.id} className="product-card" style={styles.card}>
-            {/* IMAGE SECTION */}
+            {/* IMAGE SECTION - Reduced height for compactness */}
             <div style={styles.imageWrapper}>
               <img 
                 src={product.image_url || "https://via.placeholder.com/300"} 
@@ -54,11 +70,10 @@ export default function ProductCardList({ products, onDelete, onUpdate, loading 
                 style={styles.image} 
               />
               <div style={styles.dateBadge}>
-                <Calendar size={12} />
+                <Calendar size={10} />
                 {formatDate(product.created_at)}
               </div>
               <div style={styles.usageBadge}>
-                <Clock size={12} />
                 {product.usage}
               </div>
             </div>
@@ -75,11 +90,10 @@ export default function ProductCardList({ products, onDelete, onUpdate, loading 
 
                 <div style={{ position: "relative" }}>
                   <button 
-                    className="dots-trigger" 
                     style={styles.threeDots} 
                     onClick={() => toggleMenu(product.id.toString())}
                   >
-                    <MoreVertical size={20} color="#94a3b8" />
+                    <MoreVertical size={18} color="#94a3b8" />
                   </button>
 
                   {activeMenu === product.id.toString() && (
@@ -111,11 +125,10 @@ export default function ProductCardList({ products, onDelete, onUpdate, loading 
 
               <div style={styles.footer}>
                 <div style={styles.priceGroup}>
-                  <span style={styles.priceLabel}>Price</span>
                   <span style={styles.price}>{formatCurrency(product.price)}</span>
                 </div>
                 <div style={styles.iconContainer}>
-                  <TrendingUp size={14} color="#10b981" />
+                  <TrendingUp size={12} color="#10b981" />
                 </div>
               </div>
             </div>
@@ -127,34 +140,47 @@ export default function ProductCardList({ products, onDelete, onUpdate, loading 
 }
 
 const styles: Record<string, CSSProperties> = {
-  container: { padding: "20px 0" },
-  loadingContainer: { textAlign: "center", padding: "50px", color: "#64748b" },
-  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 30 },
-  card: { background: "#fff", borderRadius: 20, overflow: "hidden", border: "1px solid #f1f5f9" },
-  imageWrapper: { position: "relative", height: 220, background: "#f8fafc" },
+  container: { padding: "10px 0" },
+  grid: { 
+    display: "grid", 
+    gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", // Smaller min-width
+    gap: 20 
+  },
+  card: { background: "#fff", borderRadius: 16, overflow: "hidden", border: "1px solid #f1f5f9" },
+  imageWrapper: { position: "relative", height: 160, background: "#f8fafc" }, // Height reduced from 220 to 160
   image: { width: "100%", height: "100%", objectFit: "cover" },
-  dateBadge: { position: "absolute", top: 12, left: 12, background: "rgba(255,255,255,0.9)", padding: "6px 12px", borderRadius: 12, fontSize: 11, color: "#64748b", display: "flex", alignItems: "center", gap: 6 },
-  usageBadge: { position: "absolute", bottom: 12, right: 12, background: "#0f172a", color: "#fff", padding: "6px 12px", borderRadius: 10, fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", gap: 5 },
-  cardBody: { padding: 24 },
-  headerRow: { display: "flex", justifyContent: "space-between", marginBottom: 12 },
-  typeLabel: { fontSize: 10, fontWeight: 700, color: "#6366f1", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4 },
-  name: { fontSize: 18, fontWeight: 700, color: "#1e293b", margin: 0 },
-  instructionsText: { fontSize: 13, color: "#64748b", lineHeight: "1.6", margin: "10px 0 20px 0", height: "40px", overflow: "hidden" },
-  footer: { paddingTop: 16, borderTop: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "flex-end" },
+  dateBadge: { position: "absolute", top: 8, left: 8, background: "rgba(255,255,255,0.9)", padding: "4px 8px", borderRadius: 8, fontSize: 10, color: "#64748b", display: "flex", alignItems: "center", gap: 4 },
+  usageBadge: { position: "absolute", bottom: 8, right: 8, background: "#0f172a", color: "#fff", padding: "4px 8px", borderRadius: 6, fontSize: 9, fontWeight: 700 },
+  cardBody: { padding: 16 }, // Padding reduced from 24 to 16
+  headerRow: { display: "flex", justifyContent: "space-between", marginBottom: 8 },
+  typeLabel: { fontSize: 9, fontWeight: 700, color: "#6366f1", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4 },
+  name: { fontSize: 16, fontWeight: 700, color: "#1e293b", margin: 0 },
+  instructionsText: { fontSize: 12, color: "#64748b", lineHeight: "1.4", margin: "8px 0 16px 0", height: "34px", overflow: "hidden" },
+  footer: { paddingTop: 12, borderTop: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" },
   priceGroup: { display: "flex", flexDirection: "column" },
-  price: { fontSize: 20, fontWeight: 800, color: "#0f172a" },
-  priceLabel: { fontSize: 11, color: "#94a3b8" },
-  iconContainer: { padding: 10, borderRadius: 12, background: "#f0fdf4" },
-  threeDots: { background: "none", border: "none", cursor: "pointer" },
-  dropdown: { position: "absolute", top: "100%", right: 0, background: "#fff", borderRadius: 12, boxShadow: "0 10px 25px rgba(0,0,0,0.1)", width: 140, padding: 6, zIndex: 100, border: "1px solid #f1f5f9" },
+  price: { fontSize: 18, fontWeight: 800, color: "#0f172a" },
+  iconContainer: { padding: 8, borderRadius: 10, background: "#f0fdf4" },
+  threeDots: { background: "none", border: "none", cursor: "pointer", padding: 4 },
+  dropdown: { position: "absolute", top: "100%", right: 0, background: "#fff", borderRadius: 12, boxShadow: "0 10px 25px rgba(0,0,0,0.1)", width: 130, padding: 4, zIndex: 100, border: "1px solid #f1f5f9" },
   menuOverlay: { position: "fixed", inset: 0, zIndex: 99 },
   divider: { height: 1, background: "#f1f5f9", margin: "4px 0" }
 };
 
 const globalStyles = `
+  @keyframes shimmer {
+    0% { background-position: -468px 0; }
+    100% { background-position: 468px 0; }
+  }
+  .shimmer {
+    background: #f6f7f8;
+    background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+    background-repeat: no-repeat;
+    background-size: 800px 100%;
+    animation: shimmer 1.2s linear infinite forwards;
+  }
   .product-card { transition: all 0.3s ease; }
-  .product-card:hover { transform: translateY(-6px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-  .menu-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; border: none; background: none; cursor: pointer; font-size: 13px; color: #475569; border-radius: 8px; }
+  .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -5px rgba(0,0,0,0.08); }
+  .menu-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px; border: none; background: none; cursor: pointer; font-size: 12px; color: #475569; border-radius: 6px; }
   .menu-item:hover { background: #f8fafc; color: #0f172a; }
   .menu-item.danger:hover { background: #fff1f2; color: #e11d48; }
 `;

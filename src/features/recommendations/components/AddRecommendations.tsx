@@ -366,4 +366,4 @@ const styles: Record<string, React.CSSProperties> = {
   footerNote: { fontSize: 11, color: "#94a3b8", fontStyle: "italic" },
   cancelBtn: { padding: "10px 16px", fontSize: 13, fontWeight: 600, color: "#64748b", background: "none", border: "none", cursor: "pointer" },
   saveBtn: { padding: "10px 20px", fontSize: 13, fontWeight: 600, color: "#fff", background: "#0f172a", border: "none", borderRadius: 8, display: "flex", alignItems: "center", gap: 8, cursor: "pointer" },
-};
+};  
